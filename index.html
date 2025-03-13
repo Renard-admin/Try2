@@ -1,206 +1,100 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="ru">
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Snake Game</title>
-<style>
-  body {
-    font-family: Arial, sans-serif;
-    text-align: center;
-    margin: 0;
-    padding: 0;
-    background-color: #f4f4f4;
-    color: #333;
-    overflow: hidden;
-  }
-  canvas {
-    display: block;
-    margin: 20px auto;
-    background-color: #fff;
-    border: 1px solid #ccc;
-  }
-  .controls {
-    position: fixed;
-    bottom: 10px;
-    width: 100%;
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    gap: 10px;
-  }
-  button {
-    padding: 15px 30px;
-    font-size: 16px;
-    cursor: pointer;
-    border: none;
-    border-radius: 5px;
-    background-color: #007bff;
-    color: white;
-    touch-action: manipulation;
-  }
-  button:active {
-    background-color: #0056b3;
-  }
-  .touch-controls {
-    display: none;
-    position: fixed;
-    bottom: 10px;
-    left: 10px;
-    width: 150px;
-    height: 150px;
-    background-color: rgba(0, 0, 0, 0.1);
-    border-radius: 10px;
-    display: grid;
-    grid-template-areas:
-      ". up ."
-      "left down right"
-      ". . .";
-    grid-gap: 10px;
-    padding: 10px;
-    box-sizing: border-box;
-  }
-  .touch-controls button {
-    background-color: rgba(0, 0, 0, 0.3);
-    border: none;
-    border-radius: 5px;
-    font-size: 20px;
-    cursor: pointer;
-    touch-action: manipulation;
-  }
-  .touch-controls button:active {
-    background-color: rgba(0, 0, 0, 0.5);
-  }
-  .up { grid-area: up; }
-  .down { grid-area: down; }
-  .left { grid-area: left; }
-  .right { grid-area: right; }
-  @media (max-width: 768px) {
-    .touch-controls {
-      display: grid;
-    }
-  }
-</style>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Вопрос</title>
+    <style>
+        body {
+            margin: 0;
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            background-color: #f0f0f0;
+        }
+
+        main {
+            text-align: center;
+            background: white;
+            padding: 40px;
+            border-radius: 15px;
+            box-shadow: 0 0 20px rgba(0,0,0,0.1);
+            position: relative;
+        }
+
+        h1 {
+            margin-bottom: 30px;
+            font-size: 2.5em;
+        }
+
+        .button-container {
+            display: flex;
+            gap: 20px;
+        }
+
+        button {
+            padding: 15px 30px;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 1.2em;
+            transition: transform 0.2s;
+        }
+
+        .yes-button {
+            background-color: #4CAF50;
+            color: white;
+        }
+
+        .no-button {
+            background-color: #f44336;
+            color: white;
+            position: absolute;
+            left: 50%;
+            top: 50%;
+            transform: translate(-50%, -50%);
+        }
+
+        button:hover {
+            transform: scale(1.1);
+        }
+    </style>
 </head>
 <body>
-<div class="controls">
-  <button id="themeButton">Change Theme (Light)</button>
-  <button id="controlButton">Change Controls (Arrow Keys)</button>
-  <p>Score: <span id="score">0</span></p>
-</div>
-<canvas id="gameCanvas" width="400" height="400"></canvas>
-<div class="touch-controls" id="touchControls">
-  <button class="up" data-direction="up">↑</button>
-  <button class="down" data-direction="down">↓</button>
-  <button class="left" data-direction="left">←</button>
-  <button class="right" data-direction="right">→</button>
-</div>
+    <main>
+        <h1>Ты гей?</h1>
+        <div class="button-container">
+            <button class="yes-button">Да</button>
+            <button class="no-button">Нет</button>
+        </div>
+    </main>
 
-<script>
-const canvas = document.getElementById('gameCanvas');
-const ctx = canvas.getContext('2d');
+    <script>
+        const noButton = document.querySelector('.no-button');
 
-let snake = [{x: 200, y: 200}];
-let dx = 10;
-let dy = 0;
-let food = {x: 300, y: 300};
-let score = 0;
-let controlMode = 'arrows';
-let theme = 'light';
+        function moveButton() {
+            const maxX = window.innerWidth - noButton.offsetWidth;
+            const maxY = window.innerHeight - noButton.offsetHeight;
+            
+            const newX = Math.random() * (maxX - 200) + 100;
+            const newY = Math.random() * (maxY - 200) + 100;
+            
+            noButton.style.left = `${newX}px`;
+            noButton.style.top = `${newY}px`;
+        }
 
-document.getElementById('themeButton').addEventListener('click', () => {
-  if (theme === 'light') { theme = 'dark'; }
-  else if (theme === 'dark') { theme = 'desert'; }
-  else if (theme === 'desert') { theme = 'garden'; }
-  else { theme = 'light'; }
-  updateTheme();
-});
-
-document.getElementById('controlButton').addEventListener('click', () => {
-  if (controlMode === 'arrows') { controlMode = 'touch'; }
-  else { controlMode = 'arrows'; }
-  document.getElementById('controlButton').innerText = `Change Controls (${controlMode === 'arrows' ? 'Arrow Keys' : 'Touch'})`;
-  document.getElementById('touchControls').style.display = controlMode === 'touch' ? 'grid' : 'none';
-});
-
-function updateTheme() {
-  document.body.className = `theme-${theme}`;
-  document.getElementById('themeButton').innerText = `Change Theme (${theme.charAt(0).toUpperCase() + theme.slice(1)})`;
-}
-
-document.addEventListener('keydown', (e) => {
-  if (controlMode !== 'arrows') return;
-  if (e.key === 'ArrowUp' && dy === 0) { dx = 0; dy = -10; }
-  if (e.key === 'ArrowDown' && dy === 0) { dx = 0; dy = 10; }
-  if (e.key === 'ArrowLeft' && dx === 0) { dx = -10; dy = 0; }
-  if (e.key === 'ArrowRight' && dx === 0) { dx = 10; dy = 0; }
-});
-
-document.querySelectorAll('.touch-controls button').forEach(button => {
-  button.addEventListener('touchstart', (e) => {
-    e.preventDefault();
-    if (controlMode !== 'touch') return;
-    const direction = button.getAttribute('data-direction');
-    if (direction === 'up' && dy === 0) { dx = 0; dy = -10; }
-    if (direction === 'down' && dy === 0) { dx = 0; dy = 10; }
-    if (direction === 'left' && dx === 0) { dx = -10; dy = 0; }
-    if (direction === 'right' && dx === 0) { dx = 10; dy = 0; }
-  });
-});
-
-function gameLoop() {
-  ctx.clearRect(0, 0, canvas.width, canvas.height);
-
-  let head = {x: snake[0].x + dx, y: snake[0].y + dy};
-
-  if (head.x < 0 || head.x >= canvas.width || head.y < 0 || head.y >= canvas.height || collision(head, snake)) {
-    resetGame();
-    return;
-  }
-
-  snake.unshift(head);
-
-  if (head.x === food.x && head.y === food.y) {
-    score++;
-    document.getElementById('score').innerText = score;
-    placeFood();
-  } else {
-    snake.pop();
-  }
-
-  ctx.fillStyle = theme === 'dark' ? '#aaa' : theme === 'desert' ? '#964B00' : theme === 'garden' ? '#228B22' : '#333';
-  snake.forEach(segment => ctx.fillRect(segment.x, segment.y, 10, 10));
-
-  ctx.fillStyle = 'red';
-  ctx.fillRect(food.x, food.y, 10, 10);
-
-  setTimeout(gameLoop, 150); // Reduced speed
-}
-
-function collision(head, array) {
-  for (let i = 0; i < array.length; i++) {
-    if (head.x === array[i].x && head.y === array[i].y) return true;
-  }
-  return false;
-}
-
-function placeFood() {
-  food.x = Math.floor(Math.random() * 40) * 10;
-  food.y = Math.floor(Math.random() * 40) * 10;
-}
-
-function resetGame() {
-  snake = [{x: 200, y: 200}];
-  dx = 10;
-  dy = 0;
-  score = 0;
-  document.getElementById('score').innerText = score;
-  placeFood();
-}
-
-placeFood();
-updateTheme();
-gameLoop();
-</script>
+        document.addEventListener('mousemove', (e) => {
+            const rect = noButton.getBoundingClientRect();
+            const distance = Math.hypot(
+                e.clientX - (rect.left + rect.width/2),
+                e.clientY - (rect.top + rect.height/2)
+            );
+            
+            if(distance < 150) {
+                moveButton();
+            }
+        });
+    </script>
 </body>
 </html>
