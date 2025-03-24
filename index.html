@@ -1,100 +1,254 @@
 <!DOCTYPE html>
 <html lang="ru">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Вопрос</title>
-    <style>
-        body {
-            margin: 0;
-            min-height: 100vh;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            background-color: #f0f0f0;
-        }
-
-        main {
-            text-align: center;
-            background: white;
-            padding: 40px;
-            border-radius: 15px;
-            box-shadow: 0 0 20px rgba(0,0,0,0.1);
-            position: relative;
-        }
-
-        h1 {
-            margin-bottom: 30px;
-            font-size: 2.5em;
-        }
-
-        .button-container {
-            display: flex;
-            gap: 20px;
-        }
-
-        button {
-            padding: 15px 30px;
-            border: none;
-            border-radius: 8px;
-            cursor: pointer;
-            font-size: 1.2em;
-            transition: transform 0.2s;
-        }
-
-        .yes-button {
-            background-color: #4CAF50;
-            color: white;
-        }
-
-        .no-button {
-            background-color: #f44336;
-            color: white;
-            position: absolute;
-            left: 50%;
-            top: 50%;
-            transform: translate(-50%, -50%);
-        }
-
-        button:hover {
-            transform: scale(1.1);
-        }
-    </style>
+<meta charset="UTF-8" />
+<title>Распознавание жестов и рисование</title>
+<style>
+body, html {
+margin: 0;
+padding: 0;
+overflow: hidden;
+background: #333;
+color: #fff;
+font-family: sans-serif;
+}
+#container {
+position: relative;
+width: 100vw;
+height: 100vh;
+background: #000;
+}
+video, canvas {
+position: absolute;
+top: 0;
+left: 0;
+width: 100%;
+height: 100%;
+object-fit: cover;
+/* Зеркальный эффект */
+transform: scaleX(-1);
+}
+#info {
+position: absolute;
+top: 10px;
+left: 10px;
+background: rgba(0,0,0,0.5);
+padding: 5px 10px;
+border-radius: 4px;
+z-index: 10;
+}
+/* Кнопка полноэкранного режима */
+#fullscreenBtn {
+position: absolute;
+top: 10px;
+right: 10px;
+z-index: 20;
+padding: 10px 20px;
+background: rgba(0, 0, 0, 0.7);
+color: #fff;
+border: none;
+border-radius: 4px;
+cursor: pointer;
+font-size: 16px;
+}
+#fullscreenBtn:hover {
+background: rgba(0, 0, 0, 0.9);
+}
+</style>
 </head>
 <body>
-    <main>
-        <h1>Ты гей?</h1>
-        <div class="button-container">
-            <button class="yes-button">Да</button>
-            <button class="no-button">Нет</button>
-        </div>
-    </main>
+<div id="container">
+<!-- Видео с камеры -->
+<video id="video" autoplay playsinline muted></video>
+<!-- Canvas для отрисовки результатов (рамки, линии рисования) -->
+<canvas id="output"></canvas>
+<!-- Слой для рисования линий (чтобы линии не стирались при обновлении видео) -->
+<canvas id="drawLayer"></canvas>
+<div id="info">Жесты: два раза сжать/разжать кулак + указательный = начать рисование; OK = очистить</div>
+<!-- Кнопка полноэкранного режима -->
+<button id="fullscreenBtn">Полный экран</button>
+</div>
 
-    <script>
-        const noButton = document.querySelector('.no-button');
+<!-- Подключение Mediapipe Hands и утилит -->
+<script src="https://cdn.jsdelivr.net/npm/@mediapipe/hands/hands.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/@mediapipe/drawing_utils/drawing_utils.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/@mediapipe/camera_utils/camera_utils.js"></script>
 
-        function moveButton() {
-            const maxX = window.innerWidth - noButton.offsetWidth;
-            const maxY = window.innerHeight - noButton.offsetHeight;
-            
-            const newX = Math.random() * (maxX - 200) + 100;
-            const newY = Math.random() * (maxY - 200) + 100;
-            
-            noButton.style.left = `${newX}px`;
-            noButton.style.top = `${newY}px`;
-        }
+<script>
+// Элементы страницы
+const videoElement = document.getElementById('video');
+const outputCanvas = document.getElementById('output');
+const drawCanvas = document.getElementById('drawLayer');
+const infoDiv = document.getElementById('info');
+const fullscreenBtn = document.getElementById('fullscreenBtn');
+const outputCtx = outputCanvas.getContext('2d');
+const drawCtx = drawCanvas.getContext('2d');
 
-        document.addEventListener('mousemove', (e) => {
-            const rect = noButton.getBoundingClientRect();
-            const distance = Math.hypot(
-                e.clientX - (rect.left + rect.width/2),
-                e.clientY - (rect.top + rect.height/2)
-            );
-            
-            if(distance < 150) {
-                moveButton();
-            }
-        });
-    </script>
+// Функция перехода в полноэкранный режим
+fullscreenBtn.addEventListener('click', () => {
+if (document.fullscreenElement) {
+document.exitFullscreen();
+} else {
+document.getElementById('container').requestFullscreen();
+}
+});
+
+// Изменяем размеры canvas под размер окна
+function resizeCanvases() {
+outputCanvas.width = videoElement.videoWidth || window.innerWidth;
+outputCanvas.height = videoElement.videoHeight || window.innerHeight;
+drawCanvas.width = outputCanvas.width;
+drawCanvas.height = outputCanvas.height;
+}
+
+// Переменные для управления состояниями жестов
+let fistCount = 0; // счетчик сжатия кулака
+let gestureActive = false; // режим рисования активен
+let lastFistState = false; // предыдущее состояние кулака (сжат или нет)
+let lastTimeFist = 0; // время последнего изменения состояния для дебаунса
+
+// Функции для определения "сжатости" пальцев.
+// Простая эвристика: если расстояние между tip и pip меньше заданного порога относительно расстояния от запястья.
+function isFingerExtended(landmarks, pipIdx, tipIdx) {
+const pip = landmarks[pipIdx];
+const tip = landmarks[tipIdx];
+const wrist = landmarks[0];
+// Евристика: если расстояние от tip до запястья значительно больше, чем от pip до запястья
+const distTip = Math.hypot(tip.x - wrist.x, tip.y - wrist.y);
+const distPip = Math.hypot(pip.x - wrist.x, pip.y - wrist.y);
+return distTip > distPip * 1.3;
+}
+
+// Проверка жеста "кулак" – все пальцы не вытянуты
+function isFist(landmarks) {
+const fingers = [
+{ pip: 6, tip: 8 }, // указательный
+{ pip: 10, tip: 12 }, // средний
+{ pip: 14, tip: 16 }, // безымянный
+{ pip: 18, tip: 20 } // мизинец
+];
+let thumbExtended = isFingerExtended(landmarks, 2, 4);
+let otherFingersFolded = fingers.every(f => !isFingerExtended(landmarks, f.pip, f.tip));
+return (!thumbExtended) && otherFingersFolded;
+}
+
+// Проверка жеста "указательный" – указательный палец вытянут, остальные нет
+function isIndexPointing(landmarks) {
+const indexExtended = isFingerExtended(landmarks, 6, 8);
+const otherFingers = [
+{ pip: 10, tip: 12 },
+{ pip: 14, tip: 16 },
+{ pip: 18, tip: 20 }
+];
+let othersFolded = otherFingers.every(f => !isFingerExtended(landmarks, f.pip, f.tip));
+return indexExtended && othersFolded;
+}
+
+// Проверка жеста OK – расстояние между большим и указательным пальцами маленькое
+function isOkGesture(landmarks) {
+const thumbTip = landmarks[4];
+const indexTip = landmarks[8];
+const dx = thumbTip.x - indexTip.x;
+const dy = thumbTip.y - indexTip.y;
+const dist = Math.hypot(dx, dy);
+return dist < 0.05;
+}
+
+// Инициализация Mediapipe Hands
+const hands = new Hands({
+locateFile: (file) => {
+return https://cdn.jsdelivr.net/npm/@mediapipe/hands/${file};
+}
+});
+hands.setOptions({
+maxNumHands: 1,
+modelComplexity: 1,
+minDetectionConfidence: 0.7,
+minTrackingConfidence: 0.7
+});
+
+// Обработка результатов от Mediapipe
+hands.onResults((results) => {
+// Обновляем размеры canvas при получении первых данных
+if (!outputCanvas.width || !outputCanvas.height) {
+resizeCanvases();
+}
+
+// Отрисовываем видео-кадр на основном canvas
+outputCtx.save();
+outputCtx.clearRect(0, 0, outputCanvas.width, outputCanvas.height);
+// При зеркальном эффекте видео выводится перевёрнутым (уже через CSS), поэтому здесь достаточно отрисовать изображение
+outputCtx.drawImage(results.image, 0, 0, outputCanvas.width, outputCanvas.height);
+
+if (results.multiHandLandmarks && results.multiHandLandmarks.length > 0) {
+const landmarks = results.multiHandLandmarks[0];
+
+// Вычисляем ограничивающий прямоугольник для руки
+let minX = 1, minY = 1, maxX = 0, maxY = 0;
+landmarks.forEach(pt => {
+if (pt.x < minX) minX = pt.x;
+if (pt.y < minY) minY = pt.y;
+if (pt.x > maxX) maxX = pt.x;
+if (pt.y > maxY) maxY = pt.y;
+});
+// Преобразуем нормированные координаты в координаты canvas
+const boxX = minX * outputCanvas.width;
+const boxY = minY * outputCanvas.height;
+const boxW = (maxX - minX) * outputCanvas.width;
+const boxH = (maxY - minY) * outputCanvas.height;
+// Рисуем зелёную рамку
+outputCtx.strokeStyle = 'lime';
+outputCtx.lineWidth = 3;
+outputCtx.strokeRect(boxX, boxY, boxW, boxH);
+
+// Логика распознавания жестов
+const now = Date.now();
+if (now - lastTimeFist > 700) {
+const fist = isFist(landmarks);
+if (fist !== lastFistState) {
+lastFistState = fist;
+lastTimeFist = now;
+if (fist) {
+fistCount++;
+console.log("Кулак обнаружен. Счёт:", fistCount);
+}
+}
+}
+if (!gestureActive && fistCount >= 2 && isIndexPointing(landmarks)) {
+gestureActive = true;
+console.log("Режим рисования активирован");
+}
+if (gestureActive) {
+const indexTip = landmarks[8];
+const x = indexTip.x * drawCanvas.width;
+const y = indexTip.y * drawCanvas.height;
+drawCtx.fillStyle = 'black';
+drawCtx.beginPath();
+drawCtx.arc(x, y, 4, 0, 2 * Math.PI);
+drawCtx.fill();
+}
+if (gestureActive && isOkGesture(landmarks)) {
+console.log("Жест OK обнаружен, очистка холста");
+drawCtx.clearRect(0, 0, drawCanvas.width, drawCanvas.height);
+gestureActive = false;
+fistCount = 0;
+}
+}
+outputCtx.restore();
+});
+
+// Инициализация камеры через утилиты Mediapipe
+const camera = new Camera(videoElement, {
+onFrame: async () => {
+await hands.send({ image: videoElement });
+},
+width: 640,
+height: 480
+});
+camera.start();
+
+// При изменении размера окна – обновляем размеры canvas
+window.addEventListener('resize', resizeCanvases);
+</script>
 </body>
 </html>
