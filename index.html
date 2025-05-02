@@ -1,127 +1,23 @@
 <!DOCTYPE html>
-<html lang="kk">
+<html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <title>Қазақ тіліндегі сөйлеу синтезаторы</title>
-    <style>
-        body {
-            font-family: Arial, sans-serif;
-            max-width: 800px;
-            margin: 20px auto;
-            padding: 20px;
-        }
-        textarea {
-            width: 100%;
-            height: 150px;
-            margin: 10px 0;
-            padding: 10px;
-        }
-        button {
-            padding: 10px 20px;
-            background-color: #4CAF50;
-            color: white;
-            border: none;
-            cursor: pointer;
-            margin: 5px;
-        }
-        button:disabled {
-            background-color: #cccccc;
-        }
-    </style>
+  <meta charset="UTF-8">
+  <title>Неоновый Градиент</title>
+  <style>
+    body {
+      margin: 0;
+      height: 100vh;
+      background: linear-gradient(90deg, #ff073a 0%, #ff073a 49%, #6f00ff 51%, #6f00ff 100%);
+      background-size: 400% 100%;
+      animation: shift 3s linear infinite;
+    }
+
+    @keyframes shift {
+      0% { background-position: 0% 0%; }
+      100% { background-position: 100% 0%; }
+    }
+  </style>
 </head>
 <body>
-    <h1>Қазақ тіліндегі текстті дыбыстау</h1>
-    
-    <textarea id="textInput" placeholder="Мәтін енгізіңіз..."></textarea><br>
-    
-    <button onclick="speak()">Сөйлету</button>
-    <button onclick="pause()">Пауза</button>
-    <button onclick="resume()">Жалғастыру</button>
-    <button onclick="stop()">Тоқтату</button>
-    <button onclick="downloadMP3()">MP3 жүктеу</button>
-
-    <script>
-        const synth = window.speechSynthesis;
-        const utterance = new SpeechSynthesisUtterance();
-        let audioBlob = null;
-
-        // Қазақ тілін орнату
-        utterance.lang = 'kk-KZ';
-        
-        function speak() {
-            utterance.text = document.getElementById('textInput').value;
-            
-            // Дауысты таңдау (браузерде қолдау болса)
-            const voices = synth.getVoices();
-            const kazakhVoice = voices.find(voice => voice.lang === 'kk-KZ');
-            
-            if(kazakhVoice) {
-                utterance.voice = kazakhVoice;
-            }
-            
-            synth.speak(utterance);
-        }
-
-        function pause() {
-            synth.pause();
-        }
-
-        function resume() {
-            synth.resume();
-        }
-
-        function stop() {
-            synth.cancel();
-        }
-
-        // MP3 жүктеу функциясы
-        async function downloadMP3() {
-            const text = document.getElementById('textInput').value;
-            
-            if(!text) {
-                alert('Мәтін енгізіңіз!');
-                return;
-            }
-
-            try {
-                // Ауыстыру үшін API қолдану (мысал ретінде)
-                const response = await fetch('https://server.com/tts', {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json',
-                    },
-                    body: JSON.stringify({
-                        text: text,
-                        language: 'kk-KZ',
-                        format: 'mp3'
-                    })
-                });
-
-                audioBlob = await response.blob();
-                
-                const url = window.URL.createObjectURL(audioBlob);
-                const a = document.createElement('a');
-                a.href = url;
-                a.download = 'speech.mp3';
-                document.body.appendChild(a);
-                a.click();
-                window.URL.revokeObjectURL(url);
-                document.body.removeChild(a);
-                
-            } catch (error) {
-                console.error('Қате:', error);
-                alert('Аудионы жүктеу кезінде қате орын алды');
-            }
-        }
-    </script>
-
-    <div style="margin-top: 20px; color: #666;">
-        <strong>Ескерту:</strong>
-        <ul>
-            <li>Браузердің қолдауына байланысты қазақ тілінің дауысы болмауы мүмкін</li>
-            <li>MP3 жүктеу үшін серверлік API қажет (мысалдағы URL шын серверге ауыстырылуы керек)</li>
-            <li>Қауіпсіздік үшін CORS параметрлерін тексеру керек</li>
-        </ul>
-    </div>
 </body>
 </html>
