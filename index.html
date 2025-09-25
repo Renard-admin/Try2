@@ -422,57 +422,17 @@
             align-items: center;
         }
         
-        .memory-map {
-            background-color: #f0f0f0;
-            border-radius: 10px;
-            overflow: hidden;
-            height: 400px;
-            position: relative;
+        .monument-list {
+            padding-left: 20px;
+            font-size: 1.1rem;
         }
-        
-        .map-point {
-            position: absolute;
-            width: 20px;
-            height: 20px;
-            background-color: var(--primary);
-            border-radius: 50%;
-            transform: translate(-50%, -50%);
-            cursor: pointer;
+
+        .monument-list li {
+            margin-bottom: 10px;
         }
-        
-        .map-point::after {
-            content: '';
-            position: absolute;
-            width: 40px;
-            height: 40px;
-            border: 2px solid var(--primary);
-            border-radius: 50%;
-            top: 50%;
-            left: 50%;
-            transform: translate(-50%, -50%);
-            animation: pulse 2s infinite;
-        }
-        
-        @keyframes pulse {
-            0% {
-                transform: translate(-50%, -50%) scale(0.8);
-                opacity: 1;
-            }
-            100% {
-                transform: translate(-50%, -50%) scale(2);
-                opacity: 0;
-            }
-        }
-        
-        .map-tooltip {
-            position: absolute;
-            background-color: white;
-            padding: 10px;
-            border-radius: 5px;
-            box-shadow: 0 3px 10px rgba(0,0,0,0.2);
-            display: none;
-            z-index: 10;
-            width: 200px;
+
+        .monument-text {
+            padding-right: 20px;
         }
         
         /* Footer */
@@ -576,6 +536,177 @@
             .stats-grid {
                 grid-template-columns: 1fr;
             }
+        }
+        
+        /* Chatbot Button */
+        .chatbot-button {
+            position: fixed;
+            bottom: 20px;
+            left: 50%;
+            transform: translateX(-50%);
+            background-color: var(--primary);
+            color: white;
+            padding: 15px 30px;
+            border-radius: 30px;
+            font-size: 1rem;
+            font-weight: 600;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.2);
+            cursor: pointer;
+            z-index: 1001;
+            transition: all 0.3s ease;
+            border: none;
+            animation: bounce-in 1s ease-out;
+        }
+
+        @keyframes bounce-in {
+            0% {
+                transform: translateX(-50%) scale(0.5);
+                opacity: 0;
+            }
+            70% {
+                transform: translateX(-50%) scale(1.1);
+                opacity: 1;
+            }
+            100% {
+                transform: translateX(-50%) scale(1);
+            }
+        }
+        
+        .chatbot-button:hover {
+            background-color: #d4a320;
+        }
+        
+        /* Chatbot Modal */
+        .chatbot-modal-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.5);
+            display: none;
+            justify-content: center;
+            align-items: center;
+            z-index: 2000;
+        }
+        
+        .chatbot-modal {
+            background-color: white;
+            border-radius: 10px;
+            width: 90%;
+            max-width: 500px;
+            height: 80%;
+            max-height: 600px;
+            display: flex;
+            flex-direction: column;
+            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.3);
+            overflow: hidden;
+        }
+        
+        .chatbot-header {
+            background-color: var(--dark);
+            color: white;
+            padding: 15px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        
+        .chatbot-header h3 {
+            margin: 0;
+            font-size: 1.2rem;
+        }
+        
+        .chatbot-close-btn {
+            background: none;
+            border: none;
+            color: white;
+            font-size: 1.5rem;
+            cursor: pointer;
+        }
+        
+        .chatbot-body {
+            flex-grow: 1;
+            padding: 20px;
+            overflow-y: auto;
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+        }
+        
+        .chat-message {
+            max-width: 80%;
+            padding: 10px 15px;
+            border-radius: 15px;
+        }
+        
+        .user-message {
+            background-color: #e6f2ff;
+            align-self: flex-end;
+            border-bottom-right-radius: 0;
+        }
+        
+        .ai-message {
+            background-color: #f0f0f0;
+            align-self: flex-start;
+            border-bottom-left-radius: 0;
+        }
+        
+        .chatbot-input {
+            padding: 15px;
+            border-top: 1px solid #ccc;
+            display: flex;
+            gap: 10px;
+        }
+        
+        .chatbot-input input {
+            flex-grow: 1;
+            padding: 10px;
+            border: 1px solid #ccc;
+            border-radius: 20px;
+            outline: none;
+        }
+        
+        .chatbot-input button {
+            background-color: var(--primary);
+            color: white;
+            border: none;
+            border-radius: 50%;
+            width: 40px;
+            height: 40px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            cursor: pointer;
+            transition: background-color 0.3s;
+        }
+        
+        .chatbot-input button:hover {
+            background-color: #d4a320;
+        }
+
+        .loading-dots {
+            display: none;
+            text-align: center;
+            padding: 10px;
+        }
+
+        .loading-dot {
+            height: 10px;
+            width: 10px;
+            background-color: var(--dark);
+            border-radius: 50%;
+            display: inline-block;
+            animation: bounce-dots 1.4s infinite ease-in-out both;
+        }
+
+        .loading-dot:nth-child(1) { animation-delay: -0.32s; }
+        .loading-dot:nth-child(2) { animation-delay: -0.16s; }
+        .loading-dot:nth-child(3) { animation-delay: 0s; }
+
+        @keyframes bounce-dots {
+            0%, 80%, 100% { transform: scale(0); }
+            40% { transform: scale(1); }
         }
     </style>
 </head>
@@ -768,14 +899,14 @@
             <h2 class="section-title">Целина в фотографиях</h2>
             <div class="gallery-grid">
                 <div class="gallery-item">
-                    <img src="https://images.unsplash.com/photo-1558618047-3c8c76ca7d13?ixlib=rb-4.0.3&auto=format&fit=crop&w=600&q=80" alt="Первые целинники">
+                    <img src="https://sputnik.kz/img/07e8/08/0e/46296828_0:0:1280:851_1920x0_80_0_0_d02ccda1d73c05e805c8d834ee61d33e.jpg.webp" alt="Первые целинники">
                     <div class="gallery-caption">
                         <h3>Первые целинники</h3>
                         <p>Добровольцы со всего СССР отправляются осваивать новые земли</p>
                     </div>
                 </div>
                 <div class="gallery-item">
-                    <img src="https://images.unsplash.com/photo-1570566998157-0df9e6ae5f44?ixlib=rb-4.0.3&auto=format&fit=crop&w=600&q=80" alt="Техника на целине">
+                    <img src="https://sputnik.kz/img/07e8/08/0e/46297062_0:107:1280:827_1920x0_80_0_0_fa306aa8bfa4d0d27a298b2cd8b8256a.jpg.webp" alt="Техника на целине">
                     <div class="gallery-caption">
                         <h3>Техника на целине</h3>
                         <p>Тысячи тракторов и комбайнов работали на полях Казахстана</p>
@@ -797,30 +928,17 @@
         <div class="container">
             <h2 class="section-title">Память о целине</h2>
             <div class="memory-content">
-                <div class="memory-text">
+                <div class="monument-text">
                     <p>Освоение целины оставило глубокий след в истории Казахстана. В память об этом событии установлены монументы по всей стране, сняты фильмы, написаны книги.</p>
                     <p>Целина изменила демографическую карту Казахстана, способствовала развитию инфраструктуры и промышленности северных регионов.</p>
                     <p>Сегодня дискуссии о целине продолжаются: одни видят в ней подвиг, другие - пример нерационального использования ресурсов. Но несомненно, что это была масштабная страница истории, повлиявшая на судьбы миллионов людей.</p>
-                </div>
-                <div class="memory-map">
-                    <div class="map-point" style="top: 30%; left: 40%;" data-city="Нур-Султан" data-desc="Монумент 'Целинникам' установлен в столице Казахстана">
-                        <div class="map-tooltip">
-                            <h4>Нур-Султан</h4>
-                            <p>Монумент 'Целинникам'</p>
-                        </div>
-                    </div>
-                    <div class="map-point" style="top: 50%; left: 35%;" data-city="Кокшетау" data-desc="Памятник первоцелинникам установлен в центре города">
-                        <div class="map-tooltip">
-                            <h4>Кокшетау</h4>
-                            <p>Памятник первоцелинникам</p>
-                        </div>
-                    </div>
-                    <div class="map-point" style="top: 60%; left: 55%;" data-city="Караганда" data-desc="Мемориал в честь целинников расположен в парке Победы">
-                        <div class="map-tooltip">
-                            <h4>Караганда</h4>
-                            <p>Мемориал в парке Победы</p>
-                        </div>
-                    </div>
+                    <br>
+                    <h3>Монументы и памятники</h3>
+                    <ul class="monument-list">
+                        <li>Монумент «Целинникам»: установлен в Астане</li>
+                        <li>Памятник первоцелинникам: расположен в городе Кокшетау</li>
+                        <li>Мемориал в честь целинников: находится в парке Победы в Караганде</li>
+                    </ul>
                 </div>
             </div>
         </div>
@@ -844,12 +962,7 @@
                 </div>
                 <div class="footer-section">
                     <h3>Контакты</h3>
-                    <p>По вопросам сотрудничества: info@celina.kz</p>
-                    <div class="social-links">
-                        <a href="#"><i class="fab fa-facebook"></i></a>
-                        <a href="#"><i class="fab fa-twitter"></i></a>
-                        <a href="#"><i class="fab fa-instagram"></i></a>
-                    </div>
+                    <p>По вопросам: Ренард и Мансур</p>
                 </div>
             </div>
             <div class="footer-bottom">
@@ -858,7 +971,35 @@
         </div>
     </footer>
 
+    <!-- Chatbot Button -->
+    <button class="chatbot-button" id="open-chatbot-btn">Задать вопрос</button>
+
+    <!-- Chatbot Modal -->
+    <div class="chatbot-modal-overlay" id="chatbot-modal-overlay">
+        <div class="chatbot-modal">
+            <div class="chatbot-header">
+                <h3>Спросите об освоении целины</h3>
+                <button class="chatbot-close-btn" id="close-chatbot-btn">&times;</button>
+            </div>
+            <div class="chatbot-body" id="chat-messages">
+                <!-- Chat messages will be appended here -->
+                <div class="ai-message chat-message">
+                    Здравствуйте! Я искусственный интеллект, обученный на данных о целине. Спросите меня о чем-нибудь!
+                </div>
+            </div>
+            <div class="chatbot-input">
+                <input type="text" id="chat-input" placeholder="Введите ваш вопрос...">
+                <button id="send-btn"><i class="fas fa-paper-plane"></i></button>
+                <button id="voice-input-btn"><i class="fas fa-microphone"></i></button>
+            </div>
+        </div>
+    </div>
+
     <script>
+        // API Configuration
+        const API_KEY = "AIzaSyAvwESMPsjRyrSijv8JG-jA9avO_9PYhK8"; // Placeholder for API Key
+        const API_URL = "https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-preview-05-20:generateContent?key=" + API_KEY;
+        
         // Mobile menu toggle
         document.querySelector('.mobile-menu').addEventListener('click', function() {
             document.querySelector('.nav-links').classList.toggle('active');
@@ -899,20 +1040,6 @@
                 btn.classList.add('active');
                 const tabId = btn.getAttribute('data-tab');
                 document.getElementById(tabId).classList.add('active');
-            });
-        });
-
-        // Map points tooltips
-        const mapPoints = document.querySelectorAll('.map-point');
-        mapPoints.forEach(point => {
-            point.addEventListener('mouseenter', function() {
-                const tooltip = this.querySelector('.map-tooltip');
-                tooltip.style.display = 'block';
-            });
-            
-            point.addEventListener('mouseleave', function() {
-                const tooltip = this.querySelector('.map-tooltip');
-                tooltip.style.display = 'none';
             });
         });
 
@@ -1002,6 +1129,157 @@
                 navbar.style.backgroundColor = 'rgba(44, 62, 80, 0.95)';
             }
         });
+
+        // --- Chatbot Functionality ---
+        const openChatbotBtn = document.getElementById('open-chatbot-btn');
+        const closeChatbotBtn = document.getElementById('close-chatbot-btn');
+        const chatbotModalOverlay = document.getElementById('chatbot-modal-overlay');
+        const chatInput = document.getElementById('chat-input');
+        const sendBtn = document.getElementById('send-btn');
+        const chatMessages = document.getElementById('chat-messages');
+        const voiceInputBtn = document.getElementById('voice-input-btn');
+        const recognition = new (window.SpeechRecognition || window.webkitSpeechRecognition)();
+        
+        // Chat history for context
+        let chatHistory = [{
+            role: "user",
+            parts: [{ text: "Здравствуйте, я хотел бы задать несколько вопросов о целине. Вы можете ответить?" }]
+        }, {
+            role: "model",
+            parts: [{ text: "Здравствуйте! Я искусственный интеллект, обученный на данных о целине. Спросите меня о чем-нибудь!" }]
+        }];
+
+        // Open chatbot modal
+        openChatbotBtn.addEventListener('click', () => {
+            chatbotModalOverlay.style.display = 'flex';
+        });
+
+        // Close chatbot modal
+        closeChatbotBtn.addEventListener('click', () => {
+            chatbotModalOverlay.style.display = 'none';
+        });
+
+        // Function to show typing indicator
+        function showLoadingIndicator() {
+            const dots = document.createElement('div');
+            dots.id = 'loading-dots';
+            dots.className = 'loading-dots';
+            dots.style.display = 'block';
+            dots.innerHTML = '<span class="loading-dot"></span><span class="loading-dot"></span><span class="loading-dot"></span>';
+            chatMessages.appendChild(dots);
+            chatMessages.scrollTop = chatMessages.scrollHeight;
+        }
+
+        // Function to hide typing indicator
+        function hideLoadingIndicator() {
+            const dots = document.getElementById('loading-dots');
+            if (dots) {
+                dots.style.display = 'none';
+                dots.remove();
+            }
+        }
+        
+        // Function to append a message to the chat window
+        function appendMessage(sender, text) {
+            const messageElement = document.createElement('div');
+            messageElement.classList.add('chat-message');
+            messageElement.classList.add(sender === 'user' ? 'user-message' : 'ai-message');
+            messageElement.innerHTML = text.replace(/\n/g, '<br>'); // Handle newlines
+            chatMessages.appendChild(messageElement);
+            chatMessages.scrollTop = chatMessages.scrollHeight;
+        }
+        
+        // Handle sending a message
+        async function sendMessage() {
+            const userMessage = chatInput.value.trim();
+            if (userMessage === '') return;
+            
+            appendMessage('user', userMessage);
+            chatHistory.push({ role: "user", parts: [{ text: userMessage }] });
+            chatInput.value = '';
+            showLoadingIndicator();
+
+            try {
+                const response = await fetch(API_URL, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        contents: chatHistory,
+                        tools: [{ "google_search": {} }],
+                        systemInstruction: {
+                            parts: [{ text: "You are a helpful assistant for answering questions about the Virgin Lands Campaign (Целина) in Kazakhstan. Your answers should be based on the provided text and knowledge of the topic. Answer in Russian." }]
+                        },
+                    })
+                });
+
+                if (!response.ok) {
+                    throw new Error(`HTTP error! status: ${response.status}`);
+                }
+
+                const result = await response.json();
+                const aiResponse = result?.candidates?.[0]?.content?.parts?.[0]?.text || "Извините, я не могу ответить на этот вопрос сейчас.";
+                
+                hideLoadingIndicator();
+                appendMessage('ai', aiResponse);
+                chatHistory.push({ role: "model", parts: [{ text: aiResponse }] });
+                
+            } catch (error) {
+                console.error("Error fetching data:", error);
+                hideLoadingIndicator();
+                appendMessage('ai', "Произошла ошибка при получении ответа. Пожалуйста, попробуйте еще раз.");
+            }
+        }
+        
+        sendBtn.addEventListener('click', sendMessage);
+        chatInput.addEventListener('keypress', (e) => {
+            if (e.key === 'Enter') {
+                sendMessage();
+            }
+        });
+        
+        // Voice input
+        let isListening = false;
+        recognition.lang = 'ru-RU';
+        recognition.interimResults = false;
+        recognition.maxAlternatives = 1;
+        
+        voiceInputBtn.addEventListener('click', () => {
+            if (isListening) {
+                recognition.stop();
+                voiceInputBtn.style.color = '';
+                voiceInputBtn.querySelector('i').className = 'fas fa-microphone';
+            } else {
+                recognition.start();
+                voiceInputBtn.style.color = 'red';
+                voiceInputBtn.querySelector('i').className = 'fas fa-microphone-slash';
+            }
+        });
+        
+        recognition.onstart = () => {
+            isListening = true;
+            console.log("Голосовой ввод активирован...");
+        };
+        
+        recognition.onresult = (event) => {
+            const speechResult = event.results[0][0].transcript;
+            chatInput.value = speechResult;
+            sendMessage();
+        };
+        
+        recognition.onend = () => {
+            isListening = false;
+            voiceInputBtn.style.color = '';
+            voiceInputBtn.querySelector('i').className = 'fas fa-microphone';
+        };
+        
+        recognition.onerror = (event) => {
+            console.error("Ошибка голосового ввода:", event.error);
+            isListening = false;
+            voiceInputBtn.style.color = '';
+            voiceInputBtn.querySelector('i').className = 'fas fa-microphone';
+            appendMessage('ai', "Извините, произошла ошибка голосового ввода.");
+        };
+
     </script>
 </body>
 </html>
