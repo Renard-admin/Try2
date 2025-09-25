@@ -1,4 +1,3 @@
-
 <!DOCTYPE html>
 <html lang="ru">
 <head>
@@ -1230,7 +1229,7 @@
                 <div class="notebook-header">
                     <div class="notebook-page-indicator">Страница <span id="current-page">1</span>/3</div>
                     <div class="notebook-page-controls">
-                        <button class="page-btn" data-page="1">1</button>
+                        <button class="page-btn active" data-page="1">1</button>
                         <button class="page-btn" data-page="2">2</button>
                         <button class="page-btn" data-page="3">3</button>
                     </div>
@@ -2890,7 +2889,7 @@
                                             return [
                                                 `Шаг 1: Записываем тождество: sin²α + cos²α = 1`,
                                                 `Шаг 2: Подставляем sin α = ${sin}: ${sin}² + cos²α = 1`,
-                                                `Шаг 3: Вычисляем: ${sin*sin} + cos²α = 1`,
+                                                `Шаг 3: Вычисляем: ${sin}² + cos²α = 1`,
                                                 `Шаг 4: Находим cos α: cos α = √(1 - ${sin*sin})`,
                                                 `Шаг 5: Получаем результат: cos α = ${Math.sqrt(1 - sin*sin)}`
                                             ];
@@ -2899,7 +2898,7 @@
                                             return [
                                                 `Шаг 1: Записываем тождество: sin²α + cos²α = 1`,
                                                 `Шаг 2: Подставляем cos α = ${cos}: sin²α + ${cos}² = 1`,
-                                                `Шаг 3: Вычисляем: sin²α + ${cos*cos} = 1`,
+                                                `Шаг 3: Вычисляем: sin²α + ${cos}² = 1`,
                                                 `Шаг 4: Находим sin α: sin α = √(1 - ${cos*cos})`,
                                                 `Шаг 5: Получаем результат: sin α = ${Math.sqrt(1 - cos*cos)}`
                                             ];
@@ -3107,8 +3106,8 @@
                                         return [
                                             `Шаг 1: Записываем числа: (${a} + ${b}i) и (${c} + ${d}i)`,
                                             `Шаг 2: Умножаем как двучлены: (${a} + ${b}i)(${c} + ${d}i) = ${a}*${c} + ${a}*${d}i + ${b}i*${c} + ${b}i*${d}i`,
-                                            `Шаг 3: Упрощаем: ${a*c} + ${a*d}i + ${b*c}i + ${b*d}i²`,
-                                            `Шаг 4: Учитываем, что i² = -1: ${a*c} + (${a*d} + ${b*c})i - ${b*d}`,
+                                            `Шаг 3: Упрощаем: ${a}*${c} + ${a}*${d}i + ${b}*${c}i + ${b}*${d}i²`,
+                                            `Шаг 4: Учитываем, что i² = -1: ${a}*${c} + (${a}*${d} + ${b}*${c})i - ${b}*${d}`,
                                             `Шаг 5: Складываем действительные части: ${a*c} - ${b*d} = ${real}`,
                                             `Шаг 6: Складываем мнимые части: ${a*d} + ${b*c} = ${imag}`,
                                             `Шаг 7: Записываем результат: ${real} ${imag >= 0 ? '+' : ''}${imag}i`
@@ -7607,10 +7606,10 @@
         class EngineeringCalculator {
             constructor() {
                 this.display = document.querySelector('.calc-display');
-                this.currentInput = '0';
-                this.waitingForNewInput = true;
-                this.memory = 0;
-                this.lastResult = null;
+                this.currentValue = '0';
+                this.previousValue = null;
+                this.operation = null;
+                this.shouldResetScreen = false;
                 
                 this.setupEventListeners();
                 this.updateDisplay();
@@ -7627,188 +7626,157 @@
                         if (value === 'C') {
                             this.clear();
                         } else if (value === '⌫') {
-                            this.backspace();
+                            this.delete();
                         } else if (value === '=') {
                             this.calculate();
                         } else if (value === 'x²') {
-                            this.square();
+                            this.handleOperator('x²');
                         } else if (value === 'x³') {
-                            this.cube();
-                        } else if (value === 'x^y') {
-                            this.power();
+                            this.handleOperator('x³');
+                        } else if (value === 'x<sup>y</sup>') {
+                            this.handleOperator('x^y');
                         } else if (value === '√') {
-                            this.sqrt();
+                            this.handleOperator('√');
                         } else if (value === 'sin') {
-                            this.sin();
+                            this.handleOperator('sin');
                         } else if (value === 'cos') {
-                            this.cos();
+                            this.handleOperator('cos');
                         } else if (value === 'tan') {
-                            this.tan();
+                            this.handleOperator('tan');
                         } else if (value === 'log') {
-                            this.log();
+                            this.handleOperator('log');
                         } else if (value === '±') {
                             this.toggleSign();
                         } else if (value === '(' || value === ')') {
-                            this.addParentheses(value);
+                            this.handleParentheses(value);
                         } else if (value === '0' || value === '1' || value === '2' || 
                                    value === '3' || value === '4' || value === '5' || 
                                    value === '6' || value === '7' || value === '8' || 
                                    value === '9' || value === '.') {
                             this.inputNumber(value);
                         } else if (value === '+' || value === '-' || value === '×' || value === '÷') {
-                            this.inputOperator(value);
+                            this.handleOperator(value);
                         }
-                        
-                        this.updateDisplay();
                     });
                 });
             }
             
-            updateDisplay() {
-                this.display.textContent = this.currentInput;
-            }
-            
-            clear() {
-                this.currentInput = '0';
-                this.waitingForNewInput = true;
-            }
-            
-            backspace() {
-                if (this.currentInput.length > 1) {
-                    this.currentInput = this.currentInput.slice(0, -1);
-                } else {
-                    this.currentInput = '0';
+            inputNumber(number) {
+                if (this.shouldResetScreen) {
+                    this.currentValue = '';
+                    this.shouldResetScreen = false;
                 }
-                this.waitingForNewInput = false;
+                
+                if (number === '.' && this.currentValue.includes('.')) {
+                    return;
+                }
+                
+                if (this.currentValue === '0' && number !== '.') {
+                    this.currentValue = number;
+                } else {
+                    this.currentValue += number;
+                }
+                
+                this.updateDisplay();
+            }
+            
+            handleOperator(operator) {
+                if (this.operation !== null) {
+                    this.calculate();
+                }
+                
+                this.previousValue = this.currentValue;
+                this.operation = operator;
+                this.shouldResetScreen = true;
             }
             
             calculate() {
-                try {
-                    // Заменяем символы для корректного вычисления
-                    let expression = this.currentInput
-                        .replace(/×/g, '*')
-                        .replace(/÷/g, '/');
-                    
-                    // Вычисляем выражение
-                    const result = eval(expression);
-                    
-                    // Сохраняем результат для дальнейших вычислений
-                    this.lastResult = result;
-                    
-                    // Отображаем результат
-                    this.currentInput = result.toString();
-                    this.waitingForNewInput = true;
-                } catch (e) {
-                    this.currentInput = 'Ошибка';
-                    setTimeout(() => {
-                        this.currentInput = '0';
-                        this.waitingForNewInput = true;
-                        this.updateDisplay();
-                    }, 1500);
-                }
-            }
-            
-            inputNumber(number) {
-                if (this.waitingForNewInput) {
-                    this.currentInput = number;
-                    this.waitingForNewInput = false;
-                } else {
-                    // Предотвращаем множественные точки
-                    if (number === '.' && this.currentInput.includes('.')) {
+                let computation;
+                const prev = parseFloat(this.previousValue);
+                const current = parseFloat(this.currentValue);
+                
+                if (isNaN(prev) || isNaN(current)) return;
+                
+                switch (this.operation) {
+                    case '+':
+                        computation = prev + current;
+                        break;
+                    case '-':
+                        computation = prev - current;
+                        break;
+                    case '×':
+                        computation = prev * current;
+                        break;
+                    case '÷':
+                        computation = prev / current;
+                        break;
+                    case '%':
+                        computation = prev % current;
+                        break;
+                    case 'x²':
+                        computation = prev * prev;
+                        break;
+                    case 'x³':
+                        computation = prev * prev * prev;
+                        break;
+                    case '√':
+                        computation = Math.sqrt(prev);
+                        break;
+                    case 'sin':
+                        computation = Math.sin(prev * Math.PI / 180);
+                        break;
+                    case 'cos':
+                        computation = Math.cos(prev * Math.PI / 180);
+                        break;
+                    case 'tan':
+                        computation = Math.tan(prev * Math.PI / 180);
+                        break;
+                    case 'log':
+                        computation = Math.log10(prev);
+                        break;
+                    default:
                         return;
-                    }
-                    this.currentInput += number;
                 }
+                
+                this.currentValue = computation.toString();
+                this.operation = null;
+                this.previousValue = null;
+                this.shouldResetScreen = true;
+                this.updateDisplay();
             }
             
-            inputOperator(operator) {
-                if (this.waitingForNewInput && this.lastResult !== null) {
-                    this.currentInput = this.lastResult.toString();
-                    this.waitingForNewInput = false;
+            clear() {
+                this.currentValue = '0';
+                this.previousValue = null;
+                this.operation = null;
+                this.shouldResetScreen = false;
+                this.updateDisplay();
+            }
+            
+            delete() {
+                if (this.currentValue.length > 1) {
+                    this.currentValue = this.currentValue.slice(0, -1);
+                } else {
+                    this.currentValue = '0';
                 }
-                this.currentInput += operator;
-                this.waitingForNewInput = true;
-            }
-            
-            square() {
-                this.currentInput = `(${this.currentInput})²`;
-                this.waitingForNewInput = true;
                 this.updateDisplay();
-                setTimeout(() => {
-                    this.calculate();
-                }, 100);
-            }
-            
-            cube() {
-                this.currentInput = `(${this.currentInput})³`;
-                this.waitingForNewInput = true;
-                this.updateDisplay();
-                setTimeout(() => {
-                    this.calculate();
-                }, 100);
-            }
-            
-            power() {
-                this.currentInput = `${this.currentInput}^`;
-                this.waitingForNewInput = false;
-            }
-            
-            sqrt() {
-                this.currentInput = `√(${this.currentInput})`;
-                this.waitingForNewInput = true;
-                this.updateDisplay();
-                setTimeout(() => {
-                    this.calculate();
-                }, 100);
-            }
-            
-            sin() {
-                this.currentInput = `sin(${this.currentInput})`;
-                this.waitingForNewInput = true;
-                this.updateDisplay();
-                setTimeout(() => {
-                    this.calculate();
-                }, 100);
-            }
-            
-            cos() {
-                this.currentInput = `cos(${this.currentInput})`;
-                this.waitingForNewInput = true;
-                this.updateDisplay();
-                setTimeout(() => {
-                    this.calculate();
-                }, 100);
-            }
-            
-            tan() {
-                this.currentInput = `tan(${this.currentInput})`;
-                this.waitingForNewInput = true;
-                this.updateDisplay();
-                setTimeout(() => {
-                    this.calculate();
-                }, 100);
-            }
-            
-            log() {
-                this.currentInput = `log(${this.currentInput})`;
-                this.waitingForNewInput = true;
-                this.updateDisplay();
-                setTimeout(() => {
-                    this.calculate();
-                }, 100);
             }
             
             toggleSign() {
-                if (this.currentInput.startsWith('-')) {
-                    this.currentInput = this.currentInput.substring(1);
-                } else {
-                    this.currentInput = '-' + this.currentInput;
-                }
+                this.currentValue = (parseFloat(this.currentValue) * -1).toString();
+                this.updateDisplay();
             }
             
-            addParentheses(value) {
-                this.currentInput += value;
-                this.waitingForNewInput = false;
+            handleParentheses(parenthesis) {
+                // В реальном калькуляторе нужно реализовать обработку скобок
+                // Для упрощения, просто добавляем скобку
+                this.currentValue += parenthesis;
+                this.shouldResetScreen = false;
+                this.updateDisplay();
+            }
+            
+            updateDisplay() {
+                this.display.textContent = this.currentValue;
             }
         }
         
@@ -7992,23 +7960,23 @@
                 this.lastY = y;
             }
             
-            handleTouchMove(e) {
+            handleTouchMove(pageIndex, e) {
                 if (!this.isDrawing) return;
                 
                 e.preventDefault();
                 const touch = e.touches[0];
-                const rect = this.canvases[this.currentPage - 1].getBoundingClientRect();
+                const rect = this.canvases[pageIndex].getBoundingClientRect();
                 const x = touch.clientX - rect.left;
                 const y = touch.clientY - rect.top;
                 
-                this.ctxs[this.currentPage - 1].strokeStyle = this.currentTool === 'erase' ? '#ffffff' : this.color;
-                this.ctxs[this.currentPage - 1].lineWidth = this.currentTool === 'erase' ? 20 : 2;
-                this.ctxs[this.currentPage - 1].lineCap = 'round';
+                this.ctxs[pageIndex].strokeStyle = this.currentTool === 'erase' ? '#ffffff' : this.color;
+                this.ctxs[pageIndex].lineWidth = this.currentTool === 'erase' ? 20 : 2;
+                this.ctxs[pageIndex].lineCap = 'round';
                 
-                this.ctxs[this.currentPage - 1].beginPath();
-                this.ctxs[this.currentPage - 1].moveTo(this.lastX, this.lastY);
-                this.ctxs[this.currentPage - 1].lineTo(x, y);
-                this.ctxs[this.currentPage - 1].stroke();
+                this.ctxs[pageIndex].beginPath();
+                this.ctxs[pageIndex].moveTo(this.lastX, this.lastY);
+                this.ctxs[pageIndex].lineTo(x, y);
+                this.ctxs[pageIndex].stroke();
                 
                 this.lastX = x;
                 this.lastY = y;
