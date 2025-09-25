@@ -6,23 +6,23 @@
     <title>Формулы для 1-11 классов</title>
     <style>
         :root {
-            --primary: #1e5799;
-            --primary-light: #207cca;
-            --primary-dark: #1a4a85;
+            --primary: #000000;
+            --primary-light: #1a1a1a;
+            --primary-dark: #000000;
             --secondary: #e63946;
             --secondary-light: #f04958;
             --secondary-dark: #c1121f;
-            --bg-primary: #f8f9fa;
-            --bg-secondary: #ffffff;
-            --bg-tertiary: #f1f1f1;
-            --text-primary: #333333;
-            --text-secondary: #666666;
-            --border: #dddddd;
+            --bg-primary: #000000;
+            --bg-secondary: #121212;
+            --bg-tertiary: #1e1e1e;
+            --text-primary: #ffffff;
+            --text-secondary: #cccccc;
+            --border: #333333;
             --success: #28a745;
             --warning: #ffc107;
             --danger: #dc3545;
-            --accent: var(--primary);
-            --accent-hover: #1c4f8c;
+            --accent: var(--secondary);
+            --accent-hover: #c1121f;
         }
 
         * {
@@ -34,11 +34,12 @@
         }
         
         body {
-            background-color: #f5f5f5;
+            background-color: #000000;
             color: var(--text-primary);
             line-height: 1.6;
             min-height: 100vh;
             touch-action: manipulation;
+            overflow-x: hidden;
         }
         
         .container {
@@ -54,13 +55,13 @@
             padding: 15px;
             background-color: var(--bg-secondary);
             border-radius: 10px;
-            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.3);
         }
         
         header h1 {
             font-size: 1.8rem;
             margin-bottom: 8px;
-            color: var(--primary);
+            color: var(--secondary);
             font-weight: 600;
         }
         
@@ -77,7 +78,8 @@
             border-radius: 8px;
             overflow: hidden;
             flex-wrap: wrap;
-            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
+            border: 1px solid var(--border);
         }
         
         .tab {
@@ -93,9 +95,9 @@
         }
         
         .tab.active {
-            background-color: var(--primary);
+            background-color: var(--secondary);
             color: white;
-            border-bottom: 2px solid var(--secondary);
+            border-bottom: 2px solid var(--secondary-dark);
         }
         
         .tab:hover:not(.active) {
@@ -108,7 +110,8 @@
             background-color: var(--bg-secondary);
             padding: 15px;
             border-radius: 8px;
-            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.3);
+            border: 1px solid var(--border);
         }
         
         .tab-content.active {
@@ -146,7 +149,7 @@
             overflow-y: auto;
             z-index: 100;
             display: none;
-            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.3);
         }
         
         .suggestion-item {
@@ -157,7 +160,7 @@
         }
         
         .suggestion-item:hover {
-            background-color: var(--primary);
+            background-color: var(--secondary);
             color: white;
         }
         
@@ -189,7 +192,6 @@
             background-color: var(--bg-secondary);
             border-radius: 10px;
             padding: 15px;
-            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
             width: 100%;
         }
         
@@ -214,7 +216,7 @@
         }
         
         .subject-title:hover {
-            background-color: var(--primary);
+            background-color: var(--secondary);
             color: white;
         }
         
@@ -247,7 +249,7 @@
             border-radius: 4px;
             cursor: pointer;
             transition: background-color 0.3s;
-            border-left: 2px solid var(--primary);
+            border-left: 2px solid var(--secondary);
         }
         
         .class-title:hover {
@@ -272,7 +274,7 @@
         
         .topic-item:hover {
             background-color: rgba(255, 255, 255, 0.05);
-            border-left: 2px solid var(--primary);
+            border-left: 2px solid var(--secondary);
         }
         
         .main-content {
@@ -289,7 +291,7 @@
         .formula-title {
             font-size: 1.3rem;
             margin-bottom: 12px;
-            color: var(--primary);
+            color: var(--secondary);
             border-bottom: 1px solid var(--border);
             padding-bottom: 8px;
         }
@@ -306,13 +308,13 @@
             border-radius: 5px;
             padding: 12px;
             margin-bottom: 12px;
-            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
-            border-left: 3px solid var(--primary);
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+            border-left: 3px solid var(--secondary);
         }
         
         .formula-item h3 {
             margin-bottom: 8px;
-            color: var(--primary);
+            color: var(--secondary);
             font-size: 1.1rem;
         }
         
@@ -321,7 +323,7 @@
             text-align: center;
             margin: 8px 0;
             padding: 8px;
-            background: #f1f1f1;
+            background: #2d2d2d;
             border-radius: 4px;
             font-weight: bold;
             overflow-x: auto;
@@ -335,7 +337,7 @@
         }
         
         .use-formula-btn {
-            background-color: var(--primary);
+            background-color: var(--secondary);
             color: white;
             border: none;
             padding: 5px 10px;
@@ -347,7 +349,7 @@
         }
         
         .use-formula-btn:hover {
-            background-color: var(--primary-dark);
+            background-color: var(--secondary-dark);
         }
         
         .calculator {
@@ -371,10 +373,12 @@
             border-radius: 4px;
             width: 100%;
             font-size: 0.9rem;
+            background-color: var(--bg-tertiary);
+            color: var(--text-primary);
         }
         
         .calculate-btn, .show-steps-btn {
-            background-color: var(--primary);
+            background-color: var(--secondary);
             color: white;
             border: none;
             padding: 8px 12px;
@@ -386,13 +390,13 @@
         }
         
         .calculate-btn:hover, .show-steps-btn:hover {
-            background-color: var(--primary-dark);
+            background-color: var(--secondary-dark);
         }
         
         .result {
             margin-top: 12px;
             padding: 8px;
-            background: #e9f4fc;
+            background: #2d2d2d;
             border-radius: 4px;
             font-size: 1rem;
             display: none;
@@ -406,7 +410,7 @@
         
         .step-by-step h3 {
             margin-bottom: 8px;
-            color: var(--primary);
+            color: var(--secondary);
             font-size: 1.1rem;
         }
         
@@ -419,7 +423,7 @@
         .step {
             margin-bottom: 6px;
             padding-left: 8px;
-            border-left: 2px solid var(--primary);
+            border-left: 2px solid var(--secondary);
             font-size: 0.9rem;
         }
         
@@ -432,7 +436,7 @@
         
         .recommendations h2 {
             margin-bottom: 12px;
-            color: var(--primary);
+            color: var(--secondary);
             font-size: 1.1rem;
         }
         
@@ -455,7 +459,7 @@
             background-color: var(--bg-secondary);
             padding: 15px;
             border-radius: 5px;
-            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.3);
             display: none;
         }
         
@@ -503,7 +507,7 @@
         }
         
         .calc-clear {
-            background-color: var(--primary);
+            background-color: var(--secondary);
             color: white;
         }
         
@@ -538,7 +542,7 @@
         
         .notebook-page-indicator {
             font-weight: bold;
-            color: var(--primary);
+            color: var(--secondary);
             padding: 4px 8px;
             background-color: var(--bg-tertiary);
             border-radius: 15px;
@@ -569,9 +573,9 @@
         }
         
         .tool-btn.active {
-            background-color: var(--primary);
+            background-color: var(--secondary);
             color: white;
-            border-color: var(--primary);
+            border-color: var(--secondary);
         }
         
         .tool-btn[data-tool="color"] {
@@ -652,9 +656,9 @@
         }
         
         .page-btn.active {
-            background-color: var(--primary);
+            background-color: var(--secondary);
             color: white;
-            border-color: var(--primary);
+            border-color: var(--secondary);
         }
         
         .notebook-actions {
@@ -668,7 +672,7 @@
             padding: 8px 12px;
             border: none;
             border-radius: 4px;
-            background-color: var(--primary);
+            background-color: var(--secondary);
             color: white;
             cursor: pointer;
             transition: background-color 0.3s;
@@ -676,7 +680,7 @@
         }
         
         .notebook-btn:hover {
-            background-color: var(--primary-dark);
+            background-color: var(--secondary-dark);
         }
         
         /* Адаптивность */
@@ -825,6 +829,59 @@
             .step {
                 font-size: 0.85rem;
             }
+        }
+        
+        /* Улучшения для мобильных устройств */
+        @media (max-width: 600px) {
+            .tool-btn {
+                min-width: 45px;
+                padding: 8px 5px;
+                font-size: 0.8rem;
+            }
+            
+            .notebook-page-controls {
+                gap: 5px;
+            }
+            
+            .page-btn {
+                padding: 4px 8px;
+                font-size: 0.8rem;
+            }
+            
+            .calculate-btn, .show-steps-btn {
+                padding: 6px 10px;
+                font-size: 0.8rem;
+            }
+            
+            .input-field {
+                padding: 5px;
+                font-size: 0.85rem;
+            }
+            
+            .suggestion-item {
+                padding: 6px 10px;
+                font-size: 0.85rem;
+            }
+            
+            .formula {
+                padding: 6px;
+                font-size: 0.95rem;
+            }
+            
+            .explanation {
+                font-size: 0.85rem;
+            }
+            
+            /* Увеличиваем размеры для касаний */
+            .tool-btn, .page-btn, .calculate-btn, .show-steps-btn {
+                min-height: 40px;
+            }
+        }
+        
+        /* Улучшения для тач-устройств */
+        .tool-btn, .page-btn, .calculate-btn, .show-steps-btn, .use-formula-btn {
+            touch-action: manipulation;
+            -webkit-tap-highlight-color: rgba(230, 57, 70, 0.3);
         }
     </style>
 </head>
@@ -1239,7 +1296,6 @@
                     <button class="tool-btn active" data-tool="text">Текст</button>
                     <button class="tool-btn" data-tool="draw">Рисование</button>
                     <button class="tool-btn" data-tool="erase">Ластик</button>
-                    <button class="tool-btn" data-tool="color" style="background-color: #000000;"></button>
                     <button class="tool-btn" data-tool="color" style="background-color: #ff0000;"></button>
                     <button class="tool-btn" data-tool="color" style="background-color: #00ff00;"></button>
                     <button class="tool-btn" data-tool="color" style="background-color: #0000ff;"></button>
@@ -5913,7 +5969,7 @@
                                         const A = U * I * t;
                                         
                                         return [
-                                            `Шаг 1: Записываем формулу: A = UIt`,
+                                            `Шаг 1: Записываем формулу: A = UI t`,
                                             `Шаг 2: Подставляем значения: A = ${U} × ${I} × ${t}`,
                                             `Шаг 3: Вычисляем: A = ${A} Дж`,
                                             `Шаг 4: Получаем результат: A = ${A} Дж`
@@ -7308,6 +7364,12 @@
             
             document.getElementById('class-filter')?.addEventListener('change', function() {
                 applyFilters();
+            });
+            
+            // Обработчик для изменения размера окна
+            window.addEventListener('resize', function() {
+                // Обновляем размеры холстов в блокноте
+                notebook.initCanvases();
             });
         });
         
