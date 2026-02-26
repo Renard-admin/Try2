@@ -3,1283 +3,919 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Целина: Казахстанская Эпопея</title>
-    <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;600;700&family=Roboto:wght@300;400;500&display=swap" rel="stylesheet">
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <title>Франция: Анатомия Великой Трансформации</title>
+    <!-- Подключаем шрифты -->
+    <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,400;0,600;0,700;1,400&family=Montserrat:wght@300;400;600;800&display=swap" rel="stylesheet">
+    <!-- Подключаем GSAP для сложных анимаций скролла -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.2/gsap.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.2/ScrollTrigger.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.2/EasePack.min.js"></script>
+
     <style>
+        /* БАЗОВЫЕ НАСТРОЙКИ И ПАЛИТРЫ */
         :root {
-            --primary: #e6b325;
-            --secondary: #8b4513;
-            --dark: #2c3e50;
-            --light: #f9f9f9;
-            --success: #27ae60;
-            --danger: #e74c3c;
+            /* Palette 1: Четвертая республика */
+            --p1-bg: #F2F1EC; --p1-text: #2B2D42; --p1-accent1: #8D3B3B; --p1-accent2: #4F5D75; --p1-dark: #D6D1C4;
+            /* Palette 2: Пятая республика */
+            --p2-bg: #FFFFFF; --p2-text: #0B3C5D; --p2-accent1: #A4161A; --p2-accent2: #C6A75E; --p2-dark: #6C757D;
+            /* Palette 6: Неоконсерватизм */
+            --p6-bg: #FFFFFF; --p6-text: #222222; --p6-accent1: #D62828; --p6-accent2: #2E7D32; --p6-dark: #1D3557;
+
+            --font-head: 'Cormorant Garamond', serif;
+            --font-body: 'Montserrat', sans-serif;
+            
+            --progress-color: #ffffff;
+
+            /* ДИНАМИЧЕСКИЕ РОЛИ ВЗГЛЯДОВ (Базовое состояние) */
+            --citizen-bg: #FAF3E0;
+            --citizen-text: #444;
+            --citizen-accent: #3A6EA5;
+
+            --power-bg: #FFFFFF;
+            --power-text: #5C677D;
+            --power-accent: #1C2541;
+
+            --world-bg: #F1FAEE;
+            --world-text: #14213D;
+            --world-accent: #2A9D8F;
+            
+            --card-shadow: 0 15px 40px rgba(0,0,0,0.08);
         }
+
+        /* RESET & BASE */
+        * { margin: 0; padding: 0; box-sizing: border-box; }
         
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
+        html { 
+            scroll-behavior: smooth; 
         }
-        
+
         body {
-            font-family: 'Roboto', sans-serif;
-            line-height: 1.6;
-            color: #333;
-            background-color: var(--light);
+            font-family: var(--font-body);
+            background-color: #050505;
+            color: #fff;
             overflow-x: hidden;
+            transition: background-color 1.2s ease, color 1.2s ease;
+            line-height: 1.6;
+            cursor: default; /* UX: базовый курсор */
         }
-        
-        h1, h2, h3, h4 {
-            font-family: 'Montserrat', sans-serif;
+
+        h1, h2, h3, h4, .serif {
+            font-family: var(--font-head);
             font-weight: 700;
-            margin-bottom: 1rem;
         }
-        
+
+        p { margin-bottom: 1.5rem; }
+        strong { font-weight: 600; }
+        ul { margin-bottom: 1.5rem; list-style-type: none; }
+
+        /* ИНДИКАТОР ПРОГРЕССА СВЕРХУ */
+        #progress-bar {
+            position: fixed;
+            top: 0; left: 0;
+            height: 3px;
+            background: var(--progress-color);
+            width: 0%;
+            z-index: 9999;
+            transition: background-color 1s ease;
+            box-shadow: 0 0 10px var(--progress-color);
+        }
+
+        /* УТИЛИТЫ СЕТКИ И ВЕРСТКИ */
         .container {
-            width: 100%;
             max-width: 1200px;
             margin: 0 auto;
-            padding: 0 20px;
+            padding: 0 2rem;
+            width: 100%;
+        }
+
+        .section-padding { padding: 8rem 0; }
+        .text-center { text-align: center; }
+        .mb-1 { margin-bottom: 0.5rem; }
+        .mb-2 { margin-bottom: 1rem; }
+        .mb-4 { margin-bottom: 2rem; }
+        .mb-6 { margin-bottom: 4rem; }
+        .mt-4 { margin-top: 2rem; }
+        .mt-8 { margin-top: 4rem; }
+
+        .grid-2 { display: grid; grid-template-columns: 1fr; gap: 4rem; align-items: center; }
+        .grid-3 { display: grid; grid-template-columns: 1fr; gap: 2rem; }
+        @media (min-width: 768px) {
+            .grid-2 { grid-template-columns: 1fr 1fr; }
+            .grid-3 { grid-template-columns: repeat(3, 1fr); }
+            .grid-2.reverse { grid-template-columns: 1.2fr 0.8fr; direction: rtl; }
+            .grid-2.reverse > * { direction: ltr; }
+        }
+
+        /* ТИПОГРАФИКА */
+        .title-hero { font-size: 3rem; line-height: 1.1; margin-bottom: 1.5rem; }
+        .title-large { font-size: 2.5rem; line-height: 1.2; margin-bottom: 1.5rem; }
+        .title-medium { font-size: 2rem; margin-bottom: 1rem; }
+        @media (min-width: 768px) {
+            .title-hero { font-size: 6rem; }
+            .title-large { font-size: 4rem; }
+        }
+        .text-xl { font-size: 1.25rem; }
+        .text-sm { font-size: 0.875rem; }
+        .tracking-widest { letter-spacing: 0.2em; text-transform: uppercase; }
+
+        .intro-subtitle { color: #888; }
+        .hero-date { color: #aaa; }
+        .intro-quote {
+            color: #888;
+            font-style: italic;
+            border-left: 1px solid #444;
+            padding-left: 2rem;
+        }
+
+        /* ТЕМЫ ЭПОХ (JS переключает класс на body) */
+        body.theme-intro { background-color: #050505; color: #e5e5e5; --progress-color: #ffffff; }
+        
+        body.theme-p1 { 
+            background-color: var(--p1-bg); color: var(--p1-text); --progress-color: var(--p1-accent1); 
+            
+            /* Динамические роли: IV Республика */
+            --citizen-bg: #F5E6D3; --citizen-text: #3E3E3E; --citizen-accent: #8D3B3B;
+            --power-bg: #E8E4DA; --power-text: #2B2D42; --power-accent: #4F5D75;
+            --world-bg: #ECECEC; --world-text: #2F3E46; --world-accent: #6C757D;
+            --card-shadow: 0 10px 30px rgba(141,59,59,0.15);
+        }
+        body.theme-p1 .epoch-title { color: var(--p1-text); }
+        body.theme-p1 .epoch-accent { color: var(--p1-accent1); }
+        body.theme-p1 .epoch-sub { color: var(--p1-accent2); }
+        
+        body.theme-p2 { 
+            background-color: var(--p2-bg); color: var(--p2-text); --progress-color: var(--p2-accent1); 
+            
+            /* Динамические роли: V Республика */
+            --citizen-bg: #F8F9FA; --citizen-text: #0B3C5D; --citizen-accent: #A4161A;
+            --power-bg: #FFFFFF; --power-text: #0B3C5D; --power-accent: #C6A75E;
+            --world-bg: #F1F3F5; --world-text: #1D3557; --world-accent: #457B9D;
+            --card-shadow: 0 15px 50px rgba(198,167,94,0.2);
+        }
+        body.theme-p2 .epoch-title { color: var(--p2-text); }
+        body.theme-p2 .epoch-accent { color: var(--p2-accent1); }
+        body.theme-p2 .epoch-sub { color: var(--p2-accent2); }
+        
+        body.theme-p6 { 
+            background-color: var(--p6-bg); color: var(--p6-text); --progress-color: var(--p6-accent1); 
+            
+            /* Динамические роли: Неоконсерватизм */
+            --citizen-bg: #EEF2F3; --citizen-text: #222; --citizen-accent: #2E7D32;
+            --power-bg: #F8F9FA; --power-text: #1D3557; --power-accent: #D62828;
+            --world-bg: #E9ECEF; --world-text: #14213D; --world-accent: #D62828;
+            --card-shadow: 0 15px 40px rgba(214,40,40,0.25);
+        }
+        body.theme-p6 .epoch-title { color: var(--p6-dark); }
+        body.theme-p6 .epoch-accent { color: var(--p6-accent1); }
+        body.theme-p6 .epoch-sub { color: var(--p6-accent2); }
+
+        /* КОСТЮМНАЯ АНИМАЦИЯ: ЭМБЛЕМА ЭПОХИ */
+        #era-badge {
+            position: fixed;
+            top: 50%;
+            right: 4%;
+            /* transform убран из CSS, управляется исключительно GSAP */
+            width: 70px;
+            height: 70px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-family: var(--font-head);
+            font-size: 24px;
+            font-weight: bold;
+            z-index: 50;
+            opacity: 0;
+            /* Плавный переход для всех свойств, кроме transform (его берет GSAP) */
+            transition: background-color 0.8s, border-radius 0.8s, box-shadow 0.8s, border-color 0.8s, color 0.8s;
+            pointer-events: none;
+            mix-blend-mode: difference;
+            color: white;
+            border: 2px solid white;
+        }
+
+        /* СПЕЦИАЛЬНЫЕ КАРТОЧКИ ВЗГЛЯДОВ (С ДИНАМИЧЕСКИМИ ПЕРЕМЕННЫМИ) */
+        .view-card {
+            padding: 2rem;
+            border-radius: 4px;
+            transition: 
+                background-color 0.8s ease,
+                color 0.8s ease,
+                border-color 0.8s ease,
+                transform 0.5s cubic-bezier(0.16, 1, 0.3, 1), 
+                box-shadow 0.5s ease;
+            cursor: pointer; /* UX: явный индикатор интерактива */
+        }
+        .view-card:hover { 
+            transform: translateY(-10px); 
+            box-shadow: var(--card-shadow); 
         }
         
-        /* Header */
-        header {
-            background: linear-gradient(rgba(0,0,0,0.7), rgba(0,0,0,0.7)), url('https://images.unsplash.com/photo-1558618047-3c8c76ca7d13?ixlib=rb-4.0.3&auto=format&fit=crop&w=1920&q=80');
+        .view-citizen {
+            background: var(--citizen-bg);
+            color: var(--citizen-text);
+            border-top: 4px solid var(--citizen-accent);
+        }
+        .view-citizen h4 { color: var(--citizen-accent); }
+
+        .view-power {
+            background: var(--power-bg);
+            color: var(--power-text);
+            border-top: 4px solid var(--power-accent);
+        }
+        .view-power h4 { color: var(--power-accent); }
+
+        .view-world {
+            background: var(--world-bg);
+            color: var(--world-text);
+            border-top: 4px solid var(--world-accent);
+        }
+        .view-world h4 { color: var(--world-accent); }
+
+        /* ФОТО С КИНЕМАТОГРАФИЧЕСКИМ КОНТРАСТОМ */
+        .photo-placeholder {
+            width: 100%;
+            height: 500px;
             background-size: cover;
             background-position: center;
-            color: white;
-            height: 100vh;
-            display: flex;
-            flex-direction: column;
-            justify-content: center;
-            align-items: center;
-            text-align: center;
             position: relative;
+            overflow: hidden;
+            border-radius: 4px;
+            /* Обновленный кинематографичный фильтр */
+            filter: grayscale(100%) contrast(1.15) brightness(0.95);
+            transition: filter 0.8s ease;
         }
-        
-        .header-content {
-            max-width: 800px;
-            padding: 0 20px;
-            z-index: 2;
+        .photo-placeholder:hover {
+            filter: grayscale(0%) contrast(1.1) brightness(1);
         }
-        
-        .header-content h1 {
-            font-size: 3.5rem;
-            margin-bottom: 1rem;
-            text-shadow: 2px 2px 4px rgba(0,0,0,0.5);
+        .photo-placeholder::after {
+            content: ''; position: absolute; inset: 0;
+            background: linear-gradient(to top, rgba(0,0,0,0.8) 0%, rgba(0,0,0,0) 50%);
+            z-index: 1; transition: opacity 0.5s;
         }
-        
-        .header-content p {
-            font-size: 1.5rem;
-            margin-bottom: 2rem;
+        .photo-placeholder:hover::after { opacity: 0.5; }
+        .photo-caption {
+            position: absolute; bottom: 0; left: 0; width: 100%;
+            padding: 2rem; z-index: 2; color: white; font-style: italic; font-size: 0.9rem;
+            transform: translateY(20px); opacity: 0; transition: all 0.5s ease;
         }
-        
-        .scroll-down {
+        .photo-placeholder:hover .photo-caption {
+            transform: translateY(0); opacity: 1;
+        }
+
+        /* ДИЗАЙН-УТИЛИТЫ ЭПОХ */
+        .block-p1-quote {
+            padding: 2rem; border-left: 4px solid var(--p1-accent1);
+            background-color: var(--p1-dark); color: var(--p1-text);
+        }
+        .block-p2-monument {
+            padding: 3rem; background-color: var(--p2-text); color: white;
+            text-align: center; border-radius: 2px;
+        }
+        .list-p2 li {
+            display: flex; align-items: center; margin-bottom: 1rem;
+        }
+        .list-p2 li::before {
+            content: ''; display: block; width: 30px; height: 2px;
+            background-color: var(--p2-accent2); margin-right: 15px;
+        }
+        .list-p6 {
+            font-family: var(--font-body); font-weight: 600; color: var(--p6-dark);
+        }
+        .list-p6 li { margin-bottom: 0.8rem; border-bottom: 1px solid #eee; padding-bottom: 0.5rem; }
+
+        /* HERO SECTION */
+        #hero {
+            height: 100vh;
+            display: flex; flex-direction: column; justify-content: center; align-items: center;
+            text-align: center; position: relative;
+        }
+        .hero-bg {
+            position: absolute; inset: 0; z-index: -1;
+            background: url('https://images.unsplash.com/photo-1502602898657-3e91760cbb34?q=80&w=2073&auto=format&fit=crop') center/cover;
+        }
+        .hero-bg::before {
+            content: ""; position: absolute; inset: 0; background: rgba(0,0,0,0.4);
+        }
+        .hero-bg::after {
+            content: "";
             position: absolute;
-            bottom: 30px;
-            left: 50%;
-            transform: translateX(-50%);
-            font-size: 2rem;
-            color: white;
+            inset: 0;
+            background: radial-gradient(circle at center, rgba(0,0,0,0.2), rgba(0,0,0,0.85));
+        }
+
+        .hero-content { z-index: 1; max-width: 900px; padding: 2rem; }
+        .scroll-prompt {
+            position: absolute; bottom: 40px; left: 50%; transform: translateX(-50%);
+            opacity: 0.5; font-size: 0.8rem; letter-spacing: 0.2em; text-transform: uppercase;
             animation: bounce 2s infinite;
         }
-        
-        @keyframes bounce {
-            0%, 20%, 50%, 80%, 100% {
-                transform: translateY(0) translateX(-50%);
-            }
-            40% {
-                transform: translateY(-10px) translateX(-50%);
-            }
-            60% {
-                transform: translateY(-5px) translateX(-50%);
-            }
-        }
-        
-        /* Navigation */
-        .nav-container {
-            position: fixed;
-            top: 0;
-            width: 100%;
-            background-color: rgba(44, 62, 80, 0.95);
-            z-index: 1000;
-            transition: all 0.3s ease;
-        }
-        
-        .navbar {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            padding: 15px 0;
-        }
-        
-        .logo {
-            font-size: 1.8rem;
-            font-weight: 700;
-            color: white;
-        }
-        
-        .nav-links {
-            display: flex;
-            list-style: none;
-        }
-        
-        .nav-links li {
-            margin-left: 30px;
-        }
-        
-        .nav-links a {
-            color: white;
-            text-decoration: none;
-            font-weight: 500;
-            transition: color 0.3s;
-        }
-        
-        .nav-links a:hover {
-            color: var(--primary);
-        }
-        
-        .mobile-menu {
-            display: none;
-            font-size: 1.5rem;
-            color: white;
-            cursor: pointer;
-        }
-        
-        /* Sections */
-        section {
-            padding: 80px 0;
-        }
-        
-        .section-title {
-            text-align: center;
-            margin-bottom: 50px;
-            position: relative;
-        }
-        
-        .section-title:after {
-            content: '';
-            position: absolute;
-            bottom: -10px;
-            left: 50%;
-            transform: translateX(-50%);
-            width: 80px;
-            height: 4px;
-            background-color: var(--primary);
-        }
-        
-        /* Why Section */
-        .why-content {
-            display: grid;
-            grid-template-columns: 1fr 1fr;
-            gap: 40px;
-            align-items: center;
-        }
-        
-        .why-text {
-            padding-right: 20px;
-        }
-        
-        .why-image {
-            background-color: #f0f0f0;
-            border-radius: 10px;
-            overflow: hidden;
-            height: 400px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            position: relative;
-        }
-        
-        .why-image img {
-            width: 100%;
-            height: 100%;
-            object-fit: cover;
-        }
-        
-        /* Scale Section */
-        .scale-section {
-            background-color: #f5f5f5;
-        }
-        
-        .stats-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
-            gap: 30px;
-            margin-bottom: 50px;
-        }
-        
-        .stat-card {
-            background-color: white;
-            border-radius: 10px;
-            padding: 30px;
-            text-align: center;
-            box-shadow: 0 5px 15px rgba(0,0,0,0.1);
-            transition: transform 0.3s;
-        }
-        
-        .stat-card:hover {
-            transform: translateY(-10px);
-        }
-        
-        .stat-icon {
-            font-size: 3rem;
-            color: var(--primary);
-            margin-bottom: 15px;
-        }
-        
-        .stat-number {
-            font-size: 2.5rem;
-            font-weight: 700;
-            color: var(--dark);
-            margin-bottom: 10px;
-        }
-        
-        /* Timeline */
-        .timeline {
-            position: relative;
-            max-width: 1200px;
-            margin: 0 auto;
-        }
-        
-        .timeline::after {
-            content: '';
-            position: absolute;
-            width: 6px;
-            background-color: var(--primary);
-            top: 0;
-            bottom: 0;
-            left: 50%;
-            margin-left: -3px;
-        }
-        
-        .timeline-item {
-            padding: 10px 40px;
-            position: relative;
-            width: 50%;
-            box-sizing: border-box;
-        }
-        
-        .timeline-item::after {
-            content: '';
-            position: absolute;
-            width: 25px;
-            height: 25px;
-            background-color: white;
-            border: 4px solid var(--primary);
-            top: 15px;
-            border-radius: 50%;
-            z-index: 1;
-        }
-        
-        .left {
-            left: 0;
-        }
-        
-        .right {
-            left: 50%;
-        }
-        
-        .left::after {
-            right: -13px;
-        }
-        
-        .right::after {
-            left: -13px;
-        }
-        
-        .timeline-content {
-            padding: 20px 30px;
-            background-color: white;
-            border-radius: 10px;
-            box-shadow: 0 5px 15px rgba(0,0,0,0.1);
-        }
-        
-        /* Consequences */
-        .consequences-tabs {
-            display: flex;
-            justify-content: center;
-            margin-bottom: 30px;
-        }
-        
-        .tab-btn {
-            padding: 12px 30px;
-            background-color: #e0e0e0;
-            border: none;
-            border-radius: 30px;
-            margin: 0 10px;
-            font-weight: 600;
-            cursor: pointer;
-            transition: all 0.3s;
-        }
-        
-        .tab-btn.active {
-            background-color: var(--primary);
-            color: white;
-        }
-        
-        .tab-content {
-            display: none;
-        }
-        
-        .tab-content.active {
-            display: block;
-            animation: fadeIn 0.5s;
-        }
-        
-        @keyframes fadeIn {
-            from { opacity: 0; }
-            to { opacity: 1; }
-        }
-        
-        .pros-cons-grid {
-            display: grid;
-            grid-template-columns: 1fr 1fr;
-            gap: 30px;
-        }
-        
-        .pros-list, .cons-list {
-            list-style: none;
-        }
-        
-        .pros-list li, .cons-list li {
-            margin-bottom: 15px;
-            padding-left: 30px;
-            position: relative;
-        }
-        
-        .pros-list li::before {
-            content: '\f00c';
-            font-family: 'Font Awesome 5 Free';
-            font-weight: 900;
-            position: absolute;
-            left: 0;
-            color: var(--success);
-        }
-        
-        .cons-list li::before {
-            content: '\f00d';
-            font-family: 'Font Awesome 5 Free';
-            font-weight: 900;
-            position: absolute;
-            left: 0;
-            color: var(--danger);
-        }
-        
-        /* Gallery */
-        .gallery-section {
-            background-color: #f5f5f5;
-        }
-        
-        .gallery-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
-            gap: 20px;
-        }
-        
-        .gallery-item {
-            position: relative;
-            overflow: hidden;
-            border-radius: 10px;
-            height: 250px;
-            cursor: pointer;
-        }
-        
-        .gallery-item img {
-            width: 100%;
-            height: 100%;
-            object-fit: cover;
-            transition: transform 0.5s;
-        }
-        
-        .gallery-item:hover img {
-            transform: scale(1.1);
-        }
-        
-        .gallery-caption {
-            position: absolute;
-            bottom: 0;
-            left: 0;
-            right: 0;
-            background: linear-gradient(transparent, rgba(0,0,0,0.7));
-            color: white;
-            padding: 20px;
-            transform: translateY(100%);
-            transition: transform 0.3s;
-        }
-        
-        .gallery-item:hover .gallery-caption {
-            transform: translateY(0);
-        }
-        
-        /* Memory */
-        .memory-content {
-            display: grid;
-            grid-template-columns: 1fr 1fr;
-            gap: 40px;
-            align-items: center;
-        }
-        
-        .monument-list {
-            padding-left: 20px;
-            font-size: 1.1rem;
-        }
+        @keyframes bounce { 0%, 100% { transform: translate(-50%, 0); } 50% { transform: translate(-50%, 10px); } }
 
-        .monument-list li {
-            margin-bottom: 10px;
+        /* ИНТЕРАКТИВ С БАШНЕЙ */
+        #tower-interactive {
+            background-color: #111;
+            color: #eee;
         }
-
-        .monument-text {
-            padding-right: 20px;
-        }
-        
-        /* Footer */
-        footer {
-            background-color: var(--dark);
-            color: white;
-            padding: 50px 0 20px;
-        }
-        
-        .footer-content {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
-            gap: 40px;
-            margin-bottom: 30px;
-        }
-        
-        .footer-section h3 {
-            margin-bottom: 20px;
-            position: relative;
-            padding-bottom: 10px;
-        }
-        
-        .footer-section h3::after {
-            content: '';
-            position: absolute;
-            bottom: 0;
-            left: 0;
-            width: 50px;
-            height: 3px;
-            background-color: var(--primary);
-        }
-        
-        .footer-bottom {
-            text-align: center;
-            padding-top: 20px;
-            border-top: 1px solid rgba(255,255,255,0.1);
-        }
-        
-        /* Responsive */
-        @media (max-width: 992px) {
-            .why-content, .memory-content {
-                grid-template-columns: 1fr;
-            }
-            
-            .timeline::after {
-                left: 31px;
-            }
-            
-            .timeline-item {
-                width: 100%;
-                padding-left: 70px;
-                padding-right: 25px;
-            }
-            
-            .timeline-item::after {
-                left: 19px;
-            }
-            
-            .left::after, .right::after {
-                left: 19px;
-            }
-            
-            .right {
-                left: 0;
-            }
-            
-            .pros-cons-grid {
-                grid-template-columns: 1fr;
-            }
-        }
-        
-        @media (max-width: 768px) {
-            .header-content h1 {
-                font-size: 2.5rem;
-            }
-            
-            .nav-links {
-                display: none;
-                position: absolute;
-                top: 70px;
-                left: 0;
-                width: 100%;
-                background-color: var(--dark);
-                flex-direction: column;
-                padding: 20px 0;
-            }
-            
-            .nav-links.active {
-                display: flex;
-            }
-            
-            .nav-links li {
-                margin: 10px 0;
-                text-align: center;
-            }
-            
-            .mobile-menu {
-                display: block;
-            }
-            
-            .stats-grid {
-                grid-template-columns: 1fr;
-            }
-        }
-        
-        /* Chatbot Button */
-        .chatbot-button {
-            position: fixed;
-            bottom: 20px;
-            left: 50%;
-            transform: translateX(-50%);
-            background-color: var(--primary);
-            color: white;
-            padding: 15px 30px;
-            border-radius: 30px;
-            font-size: 1rem;
-            font-weight: 600;
-            box-shadow: 0 5px 15px rgba(0,0,0,0.2);
+        #tower-box {
+            padding: 3rem;
+            border: 2px dashed #444;
+            border-radius: 12px;
             cursor: pointer;
-            z-index: 1001;
-            transition: all 0.3s ease;
-            border: none;
-            animation: bounce-in 1s ease-out;
-        }
-
-        @keyframes bounce-in {
-            0% {
-                transform: translateX(-50%) scale(0.5);
-                opacity: 0;
-            }
-            70% {
-                transform: translateX(-50%) scale(1.1);
-                opacity: 1;
-            }
-            100% {
-                transform: translateX(-50%) scale(1);
-            }
-        }
-        
-        .chatbot-button:hover {
-            background-color: #d4a320;
-        }
-        
-        /* Chatbot Modal */
-        .chatbot-modal-overlay {
-            position: fixed;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            background-color: rgba(0, 0, 0, 0.5);
-            display: none;
-            justify-content: center;
-            align-items: center;
-            z-index: 2000;
-        }
-        
-        .chatbot-modal {
-            background-color: white;
-            border-radius: 10px;
-            width: 90%;
-            max-width: 500px;
-            height: 80%;
-            max-height: 600px;
-            display: flex;
-            flex-direction: column;
-            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.3);
-            overflow: hidden;
-        }
-        
-        .chatbot-header {
-            background-color: var(--dark);
-            color: white;
-            padding: 15px;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-        }
-        
-        .chatbot-header h3 {
-            margin: 0;
-            font-size: 1.2rem;
-        }
-        
-        .chatbot-close-btn {
-            background: none;
-            border: none;
-            color: white;
-            font-size: 1.5rem;
-            cursor: pointer;
-        }
-        
-        .chatbot-body {
-            flex-grow: 1;
-            padding: 20px;
-            overflow-y: auto;
-            display: flex;
-            flex-direction: column;
-            gap: 15px;
-        }
-        
-        .chat-message {
-            max-width: 80%;
-            padding: 10px 15px;
-            border-radius: 15px;
-        }
-        
-        .user-message {
-            background-color: #e6f2ff;
-            align-self: flex-end;
-            border-bottom-right-radius: 0;
-        }
-        
-        .ai-message {
-            background-color: #f0f0f0;
-            align-self: flex-start;
-            border-bottom-left-radius: 0;
-        }
-        
-        .chatbot-input {
-            padding: 15px;
-            border-top: 1px solid #ccc;
-            display: flex;
-            gap: 10px;
-        }
-        
-        .chatbot-input input {
-            flex-grow: 1;
-            padding: 10px;
-            border: 1px solid #ccc;
-            border-radius: 20px;
-            outline: none;
-        }
-        
-        .chatbot-input button {
-            background-color: var(--primary);
-            color: white;
-            border: none;
-            border-radius: 50%;
-            width: 40px;
-            height: 40px;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            cursor: pointer;
-            transition: background-color 0.3s;
-        }
-        
-        .chatbot-input button:hover {
-            background-color: #d4a320;
-        }
-
-        .loading-dots {
-            display: none;
-            text-align: center;
-            padding: 10px;
-        }
-
-        .loading-dot {
-            height: 10px;
-            width: 10px;
-            background-color: var(--dark);
-            border-radius: 50%;
+            transition: border-color 0.3s, box-shadow 0.3s;
             display: inline-block;
-            animation: bounce-dots 1.4s infinite ease-in-out both;
+            min-width: 300px;
+        }
+        #tower-box:hover {
+            border-color: #888;
+        }
+        #tower-icon {
+            font-size: 4rem;
+            margin-bottom: 1rem;
+            transition: transform 0.2s ease, text-shadow 0.3s ease;
+        }
+        #video-container {
+            opacity: 0;
+            transition: opacity 0.8s ease;
         }
 
-        .loading-dot:nth-child(1) { animation-delay: -0.32s; }
-        .loading-dot:nth-child(2) { animation-delay: -0.16s; }
-        .loading-dot:nth-child(3) { animation-delay: 0s; }
-
-        @keyframes bounce-dots {
-            0%, 80%, 100% { transform: scale(0); }
-            40% { transform: scale(1); }
+        /* ИДЕАЛЬНЫЙ ФИНАЛ */
+        .finale-section {
+            min-height: 100vh;
+            display: flex; align-items: center; justify-content: center;
+            background-color: #000; color: #fff; text-align: center; padding: 2rem;
+            position: relative; z-index: 10;
         }
+        .finale-line {
+            width: 0;
+            height: 1px;
+            background: #fff;
+            margin: 0 auto 4rem auto;
+            opacity: 0.5;
+        }
+        .finale-phrase {
+            font-size: 2.5rem; line-height: 1.4; max-width: 900px; margin: 0 auto 5rem auto;
+            color: #ffffff; text-shadow: 0 0 20px rgba(255,255,255,0.2);
+        }
+        @media (min-width: 768px) { .finale-phrase { font-size: 4rem; } }
+        .finale-names {
+            display: flex; justify-content: center; gap: 2rem; flex-wrap: wrap;
+            font-family: var(--font-head); font-size: 1.5rem; color: #888;
+        }
+        .finale-credits {
+            margin-top: 4rem; font-size: 0.75rem; color: #333;
+            text-transform: uppercase; letter-spacing: 0.3em;
+        }
+
+        /* Контейнер секции для затухания */
+        .fade-container { transition: opacity 0.5s ease; }
     </style>
 </head>
-<body>
-    <!-- Navigation -->
-    <div class="nav-container">
-        <div class="container">
-            <nav class="navbar">
-                <div class="logo">Целина</div>
-                <ul class="nav-links">
-                    <li><a href="#why">Почему Целина?</a></li>
-                    <li><a href="#scale">Масштаб</a></li>
-                    <li><a href="#timeline">Хронология</a></li>
-                    <li><a href="#consequences">Итоги</a></li>
-                    <li><a href="#gallery">Галерея</a></li>
-                    <li><a href="#memory">Память</a></li>
-                </ul>
-                <div class="mobile-menu">
-                    <i class="fas fa-bars"></i>
-                </div>
-            </nav>
-        </div>
-    </div>
+<body class="theme-intro">
 
-    <!-- Header -->
-    <header>
-        <div class="header-content">
-            <h1>Целина: Казахстанская Эпопея</h1>
-            <p>Интерактивная инфографика о крупнейшем аграрном проекте СССР</p>
-            <p>1954-1965 гг.</p>
-        </div>
-        <div class="scroll-down">
-            <i class="fas fa-chevron-down"></i>
-        </div>
-    </header>
+    <!-- ИНДИКАТОР ПРОГРЕССА СВЕРХУ -->
+    <div id="progress-bar"></div>
 
-    <!-- Why Section -->
-    <section id="why">
-        <div class="container">
-            <h2 class="section-title">Почему Целина?</h2>
-            <div class="why-content">
-                <div class="why-text">
-                    <p>После Великой Отечественной войны СССР столкнулся с продовольственным кризисом. Стране нужно было срочно увеличить производство зерна для обеспечения населения хлебом и развития животноводства.</p>
-                    <p>В 1954 году под руководством Никиты Хрущева было принято решение об освоении целинных и залежных земель. Основные территории находились в Казахстане, Сибири, на Урале и в Поволжье.</p>
-                    <p>Казахстан стал главной житницей целины - здесь планировалось освоить более 25 миллионов гектаров земель.</p>
+    <!-- КОСТЮМНАЯ АНИМАЦИЯ -->
+    <div id="era-badge">IV</div>
+
+    <!-- HERO СЕКЦИЯ -->
+    <section id="hero" class="gs-section" data-theme="theme-intro">
+        <div class="hero-bg"></div>
+        <div class="hero-content fade-container">
+            <h3 class="tracking-widest mb-2 text-sm intro-subtitle">Особенности развития западных стран</h3>
+            <h1 class="title-hero serif gs-reveal">ФРАНЦИЯ:<br>АНАТОМИЯ ВЕЛИКОЙ ТРАНСФОРМАЦИИ</h1>
+            <p class="text-xl serif hero-date gs-reveal">(1945–1990-е гг.)</p>
+        </div>
+        <div class="scroll-prompt">Вниз для погружения</div>
+    </section>
+
+    <!-- ВВЕДЕНИЕ -->
+    <section class="section-padding gs-section" data-theme="theme-intro" id="intro-text">
+        <div class="container fade-container">
+            <h2 class="title-large serif mb-6" style="border-bottom: 1px solid #333; padding-bottom: 1rem;">Введение: Глобальный контекст</h2>
+            <div class="grid-2">
+                <div class="gs-reveal">
+                    <p>После Второй мировой войны Запад столкнулся с тремя ключевыми задачами: <strong>восстановление разрушенной экономики</strong>, <strong>предотвращение социальных революций</strong> и <strong>противостояние СССР</strong> в условиях холодной войны.</p>
+                    <p>Западные страны выбрали модель: государственное регулирование экономики, расширение социальных гарантий и укрепление демократии. Это был переход от классического либерализма XIX века к социальному государству.</p>
                 </div>
-                <div class="why-image">
-                    <img src="https://images.unsplash.com/photo-1500382017468-9049fed747ef?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80" alt="Пшеничное поле">
+                <div class="gs-reveal">
+                    <p class="text-xl serif intro-quote">
+                        Вторая половина XX века для Запада — это эпоха «Славного тридцатилетия» (1945–1975). Время беспрецедентного роста, когда Франция превратилась из аграрно-индустриальной страны в постиндустриального лидера. Но этот путь пролегал через политические кризисы, колониальные войны и радикальную смену экономических доктрин.
+                    </p>
                 </div>
             </div>
         </div>
     </section>
 
-    <!-- Scale Section -->
-    <section id="scale" class="scale-section">
-        <div class="container">
-            <h2 class="section-title">Масштаб проекта</h2>
-            <div class="stats-grid">
-                <div class="stat-card">
-                    <div class="stat-icon">
-                        <i class="fas fa-users"></i>
-                    </div>
-                    <div class="stat-number">2 млн</div>
-                    <p>человек отправились на целину</p>
-                </div>
-                <div class="stat-card">
-                    <div class="stat-icon">
-                        <i class="fas fa-tractor"></i>
-                    </div>
-                    <div class="stat-number">200 тыс.</div>
-                    <p>тракторов и комбайнов было направлено</p>
-                </div>
-                <div class="stat-card">
-                    <div class="stat-icon">
-                        <i class="fas fa-seedling"></i>
-                    </div>
-                    <div class="stat-number">25 млн га</div>
-                    <p>земель освоено в Казахстане</p>
-                </div>
-                <div class="stat-card">
-                    <div class="stat-icon">
-                        <i class="fas fa-city"></i>
-                    </div>
-                    <div class="stat-number">337</div>
-                    <p>новых совхозов создано</p>
-                </div>
+    <!-- ГЛАВА 1: ЧЕТВЕРТАЯ РЕСПУБЛИКА (Нестабильность, Jitter) -->
+    <section class="section-padding gs-section" data-theme="theme-p1" id="chapter1">
+        <div class="container fade-container">
+            <div class="text-center mb-6 gs-reveal-p1">
+                <span class="tracking-widest epoch-sub">1946–1958</span>
+                <h2 class="title-large epoch-title">Четвертая республика:<br>Хрупкий фундамент</h2>
             </div>
-            <div class="chart-container">
-                <canvas id="settlementChart"></canvas>
-            </div>
-        </div>
-    </section>
 
-    <!-- Timeline Section -->
-    <section id="timeline">
-        <div class="container">
-            <h2 class="section-title">Хронология событий</h2>
-            <div class="timeline">
-                <div class="timeline-item left">
-                    <div class="timeline-content">
-                        <h3>1954</h3>
-                        <p>Начало кампании. Первые эшелоны с добровольцами прибывают в Казахстан. Освоение первых 13 млн га земель.</p>
+            <div class="grid-2 mb-6">
+                <div class="gs-reveal-p1">
+                    <h3 class="title-medium epoch-title">Политическая архитектура: «Власть без руля»</h3>
+                    <p>Конституция 1946 года создала систему, где главная власть была у парламента, а президент имел ограниченные полномочия. Трипартизм (ФКП, СФИО, МРП) и их вечные споры приводили к параличу власти.</p>
+                    <div class="block-p1-quote mt-4 mb-4 gs-reveal-p1">
+                        <p class="epoch-accent" style="font-weight: bold; font-size: 1.2rem; margin-bottom: 0.5rem;">Результат нестабильности:</p>
+                        <p style="margin-bottom: 0;">С 1946 по 1958 год сменилось <strong>24 правительства</strong>. Страна не могла эффективно решать вопросы деколонизации (Алжир).</p>
                     </div>
                 </div>
-                <div class="timeline-item right">
-                    <div class="timeline-content">
-                        <h3>1956</h3>
-                        <p>Рекордный урожай - собрано 125 млн тонн зерна по всему СССР. Казахстан дает треть всего урожая.</p>
-                    </div>
+                <!-- Фото: Разрушения / Черно-белый Париж -->
+                <div class="photo-placeholder gs-reveal-p1" style="background-image: url('https://avatars.mds.yandex.net/i?id=6e46c8d0fc1a2224e2438e47c8ab8bebc4b1af2a-12421984-images-thumbs&n=13');">
+                    <div class="photo-caption">Черно-белый Париж 1950-х годов. Ощущение послевоенного напряжения.</div>
                 </div>
-                <div class="timeline-item left">
-                    <div class="timeline-content">
-                        <h3>1959</h3>
-                        <p>Появление первых признаков экологических проблем: пыльные бури, эрозия почв.</p>
-                    </div>
+            </div>
+
+            <div class="mb-6 gs-reveal-p1">
+                <h3 class="title-medium epoch-title">План Монне и рождение Дирижизма</h3>
+                <p>Франция сделала ставку на <strong>кейнсианство</strong> (государство должно активно вмешиваться в экономику). Была проведена национализация крупных банков, энергетики, транспорта, созданы пятилетние планы развития. Франция стала страной с самым сильным госрегулированием.</p>
+            </div>
+
+            <!-- ВЗГЛЯДЫ 1 -->
+            <div class="grid-3 mt-8 views-container">
+                <div class="view-card view-citizen gs-reveal-p1">
+                    <h4 class="tracking-widest mb-1 text-sm">👁 Обычный гражданин</h4>
+                    <p class="text-sm" style="margin: 0;">«Мы работаем по 50 часов в неделю, чтобы восстановить страну. У меня наконец-то есть холодильник, но я боюсь завтрашнего дня, потому что правительство опять развалилось...»</p>
                 </div>
-                <div class="timeline-item right">
-                    <div class="timeline-content">
-                        <h3>1963</h3>
-                        <p>Кризисный год. Урожайность резко падает. СССР впервые закупает зерно за границей.</p>
-                    </div>
+                <div class="view-card view-power gs-reveal-p1">
+                    <h4 class="tracking-widest mb-1 text-sm">👁 Человек у власти</h4>
+                    <p class="text-sm" style="margin: 0;">«Мы строим фундамент новой Европы. Но я не могу закончить ни одну реформу внутри страны — меня увольняют раньше, чем чернила на указе высохнут».</p>
                 </div>
-                <div class="timeline-item left">
-                    <div class="timeline-content">
-                        <h3>1965</h3>
-                        <p>Официальное завершение целины. Подведены итоги: валовые сборы выросли, но урожайность осталась низкой.</p>
-                    </div>
+                <div class="view-card view-world gs-reveal-p1">
+                    <h4 class="tracking-widest mb-1 text-sm">👁 Взгляд из других стран</h4>
+                    <p class="text-sm" style="margin: 0;">«Франция экономически оживает, но политически — катастрофа. Она не может быть надежным союзником по НАТО, пока её парламент напоминает восточный базар».</p>
                 </div>
             </div>
         </div>
     </section>
 
-    <!-- Consequences Section -->
-    <section id="consequences">
-        <div class="container">
-            <h2 class="section-title">Итоги и последствия</h2>
-            <div class="consequences-tabs">
-                <button class="tab-btn active" data-tab="pros">Достижения</button>
-                <button class="tab-btn" data-tab="cons">Проблемы</button>
+    <!-- ГЛАВА 2: ПЯТАЯ РЕСПУБЛИКА (Монументальность, Строгость) -->
+    <section class="section-padding gs-section" data-theme="theme-p2" id="chapter2">
+        <div class="container fade-container">
+            <div class="text-center mb-6 gs-reveal-p2">
+                <span class="tracking-widest epoch-sub">1958–1974</span>
+                <h2 class="title-large epoch-title" style="text-transform: uppercase; letter-spacing: 0.1em;">Пятая республика:<br>Эра Голлизма</h2>
             </div>
-            <div class="tab-content active" id="pros">
-                <div class="pros-cons-grid">
-                    <div>
-                        <h3>Экономические</h3>
-                        <ul class="pros-list">
-                            <li>Увеличение производства зерна в 2 раза</li>
-                            <li>Создание новой сельскохозяйственной базы</li>
-                            <li>Развитие инфраструктуры в регионах</li>
-                        </ul>
-                    </div>
-                    <div>
-                        <h3>Социальные</h3>
-                        <ul class="pros-list">
-                            <li>Приток специалистов в Казахстан</li>
-                            <li>Развитие городов и поселков</li>
-                            <li>Укрепление межнациональных связей</li>
-                        </ul>
-                    </div>
-                </div>
-            </div>
-            <div class="tab-content" id="cons">
-                <div class="pros-cons-grid">
-                    <div>
-                        <h3>Экологические</h3>
-                        <ul class="cons-list">
-                            <li>Истощение и эрозия почв</li>
-                            <li>Пыльные бури на миллионах гектаров</li>
-                            <li>Нарушение экологического баланса</li>
-                        </ul>
-                    </div>
-                    <div>
-                        <h3>Социальные</h3>
-                        <ul class="cons-list">
-                            <li>Упадок традиционного животноводства</li>
-                            <li>Изменение этнического состава регионов</li>
-                            <li>Сезонный характер работ</li>
-                        </ul>
-                    </div>
-                </div>
-            </div>
-            <div class="chart-container" style="margin-top: 50px;">
-                <canvas id="harvestChart"></canvas>
-            </div>
-        </div>
-    </section>
 
-    <!-- Gallery Section -->
-    <section id="gallery" class="gallery-section">
-        <div class="container">
-            <h2 class="section-title">Целина в фотографиях</h2>
-            <div class="gallery-grid">
-                <div class="gallery-item">
-                    <img src="https://sputnik.kz/img/07e8/08/0e/46296828_0:0:1280:851_1920x0_80_0_0_d02ccda1d73c05e805c8d834ee61d33e.jpg.webp" alt="Первые целинники">
-                    <div class="gallery-caption">
-                        <h3>Первые целинники</h3>
-                        <p>Добровольцы со всего СССР отправляются осваивать новые земли</p>
-                    </div>
+            <div class="grid-2 reverse mb-6">
+                <!-- Фото: Монументальность, Де Голль, Архитектура -->
+                <div class="photo-placeholder gs-reveal-p2" style="background-image: url('https://avatars.mds.yandex.net/i?id=66d1b5debd9adc2a882f178082e32894c41c7811-12484740-images-thumbs&n=13');">
+                    <div class="photo-caption">Монументальная архитектура Парижа. Триумфальная арка. Симметрия и величие.</div>
                 </div>
-                <div class="gallery-item">
-                    <img src="https://sputnik.kz/img/07e8/08/0e/46297062_0:107:1280:827_1920x0_80_0_0_fa306aa8bfa4d0d27a298b2cd8b8256a.jpg.webp" alt="Техника на целине">
-                    <div class="gallery-caption">
-                        <h3>Техника на целине</h3>
-                        <p>Тысячи тракторов и комбайнов работали на полях Казахстана</p>
-                    </div>
-                </div>
-                <div class="gallery-item">
-                    <img src="https://images.unsplash.com/photo-1500382017468-9049fed747ef?ixlib=rb-4.0.3&auto=format&fit=crop&w=600&q=80" alt="Урожай">
-                    <div class="gallery-caption">
-                        <h3>Рекордный урожай</h3>
-                        <p>В лучшие годы Казахстан давал до 40% всего зерна СССР</p>
-                    </div>
-                </div>
-            </div>
-        </div>
-    </section>
-
-    <!-- Memory Section -->
-    <section id="memory">
-        <div class="container">
-            <h2 class="section-title">Память о целине</h2>
-            <div class="memory-content">
-                <div class="monument-text">
-                    <p>Освоение целины оставило глубокий след в истории Казахстана. В память об этом событии установлены монументы по всей стране, сняты фильмы, написаны книги.</p>
-                    <p>Целина изменила демографическую карту Казахстана, способствовала развитию инфраструктуры и промышленности северных регионов.</p>
-                    <p>Сегодня дискуссии о целине продолжаются: одни видят в ней подвиг, другие - пример нерационального использования ресурсов. Но несомненно, что это была масштабная страница истории, повлиявшая на судьбы миллионов людей.</p>
-                    <br>
-                    <h3>Монументы и памятники</h3>
-                    <ul class="monument-list">
-                        <li>Монумент «Целинникам»: установлен в Астане</li>
-                        <li>Памятник первоцелинникам: расположен в городе Кокшетау</li>
-                        <li>Мемориал в честь целинников: находится в парке Победы в Караганде</li>
+                <div class="gs-reveal-p2">
+                    <h3 class="title-medium epoch-accent">Возвращение Генерала</h3>
+                    <p>В 1958 году путч в Алжире поставил Францию на грань гражданской войны. Шарль де Голль вернулся как «спаситель нации». Новая Конституция 1958 года радикально изменила баланс.</p>
+                    <ul class="list-p2 mt-4 mb-4">
+                        <li><strong>Сильный президент:</strong> назначает премьера, глава армии, может распускать парламент.</li>
+                        <li><strong>Прямые выборы:</strong> с 1962 года президента выбирает народ.</li>
+                        <li><strong>Статья 16:</strong> Чрезвычайные полномочия президента.</li>
                     </ul>
+                    <p style="font-size: 1.2rem; font-weight: bold; color: var(--p2-text);">Франция перешла от парламентской нестабильности к «сильной власти».</p>
+                </div>
+            </div>
+
+            <div class="block-p2-monument mb-6 gs-reveal-p2">
+                <h3 class="title-medium epoch-sub mb-4">Политика «Величия» (Grandeur) и Голлизм</h3>
+                <div class="grid-3" style="text-align: left;">
+                    <div>
+                        <strong class="epoch-accent text-xl block mb-1">Независимость</strong>
+                        <p class="text-sm">Создание собственного ядерного щита (Force de Frappe). Выход из военной структуры НАТО в 1966.</p>
+                    </div>
+                    <div>
+                        <strong class="epoch-accent text-xl block mb-1">Экономический рывок</strong>
+                        <p class="text-sm">Государство дирижировало промышленностью: поезда TGV, авиация Airbus, космос (Ariane).</p>
+                    </div>
+                    <div>
+                        <strong class="epoch-accent text-xl block mb-1">Суть Голлизма</strong>
+                        <p class="text-sm">Сильное государство + national sovereignty + социальное партнерство. Отказ от крайностей.</p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- ВЗГЛЯДЫ 2 -->
+            <div class="grid-3 mt-8 views-container">
+                <div class="view-card view-citizen gs-reveal-p2">
+                    <h4 class="tracking-widest mb-1 text-sm">👁 Обычный гражданин</h4>
+                    <p class="text-sm" style="margin: 0;">«Наконец-то порядок. Де Голль говорит с Америкой на равных. У меня появилась машина, а мой сын пошел в университет. Мы чувствуем себя великими».</p>
+                </div>
+                <div class="view-card view-power gs-reveal-p2">
+                    <h4 class="tracking-widest mb-1 text-sm">👁 Человек у власти</h4>
+                    <p class="text-sm" style="margin: 0;">«Мы создали элиту. Теперь страной управляют выпускники спецшкол, а не болтуны в парламенте. Мы планируем развитие на десятилетия».</p>
+                </div>
+                <div class="view-card view-world gs-reveal-p2">
+                    <h4 class="tracking-widest mb-1 text-sm">👁 Взгляд из других стран</h4>
+                    <p class="text-sm" style="margin: 0;">«Де Голль — головная боль Вашингтона. Он блокирует Британию и дружит с СССР. Но Франция стала мощной силой».</p>
                 </div>
             </div>
         </div>
     </section>
 
-    <!-- Footer -->
-    <footer>
-        <div class="container">
-            <div class="footer-content">
-                <div class="footer-section">
-                    <h3>О проекте</h3>
-                    <p>Интерактивная инфографика создана для ознакомления с историей освоения целинных земель в Казахстане.</p>
-                </div>
-                <div class="footer-section">
-                    <h3>Источники</h3>
-                    <ul>
-                        <li>Национальный архив Республики Казахстан</li>
-                        <li>Статистические сборники СССР</li>
-                        <li>Исторические исследования</li>
-                    </ul>
-                </div>
-                <div class="footer-section">
-                    <h3>Контакты</h3>
-                    <p>По вопросам: Ренард и Мансур</p>
-                </div>
+    <!-- ГЛАВА 3: НЕОКОНСЕРВАТИЗМ (Динамика рынка, Резкость) -->
+    <section class="section-padding gs-section" data-theme="theme-p6" id="chapter3">
+        <div class="container fade-container">
+            <div class="text-center mb-6 gs-reveal-p6">
+                <span class="tracking-widest epoch-sub">1980-е годы</span>
+                <h2 class="title-large epoch-title">Неоконсерватизм:<br>Либеральный поворот</h2>
             </div>
-            <div class="footer-bottom">
-                <p>&copy; Целина: Казахстанская Эпопея.</p>
-            </div>
-        </div>
-    </footer>
 
-    <!-- Chatbot Button -->
-    <button class="chatbot-button" id="open-chatbot-btn">Задать вопрос</button>
-
-    <!-- Chatbot Modal -->
-    <div class="chatbot-modal-overlay" id="chatbot-modal-overlay">
-        <div class="chatbot-modal">
-            <div class="chatbot-header">
-                <h3>Спросите об освоении целины</h3>
-                <button class="chatbot-close-btn" id="close-chatbot-btn">&times;</button>
-            </div>
-            <div class="chatbot-body" id="chat-messages">
-                <!-- Chat messages will be appended here -->
-                <div class="ai-message chat-message">
-                    Здравствуйте! Я искусственный интеллект, обученный на данных о целине. Спросите меня о чем-нибудь!
-                </div>
-            </div>
-            <div class="chatbot-input">
-                <input type="text" id="chat-input" placeholder="Введите ваш вопрос...">
-                <button id="send-btn"><i class="fas fa-paper-plane"></i></button>
-                <button id="voice-input-btn"><i class="fas fa-microphone"></i></button>
-            </div>
-        </div>
-    </div>
-
-    <script>
-        // API Configuration
-        const API_KEY = "AIzaSyAvwESMPsjRyrSijv8JG-jA9avO_9PYhK8"; // Placeholder for API Key
-        const API_URL = "https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-preview-05-20:generateContent?key=" + API_KEY;
-        
-        // Mobile menu toggle
-        document.querySelector('.mobile-menu').addEventListener('click', function() {
-            document.querySelector('.nav-links').classList.toggle('active');
-        });
-
-        // Smooth scrolling for navigation links
-        document.querySelectorAll('a[href^="#"]').forEach(anchor => {
-            anchor.addEventListener('click', function (e) {
-                e.preventDefault();
-                
-                const targetId = this.getAttribute('href');
-                if (targetId === '#') return;
-                
-                const targetElement = document.querySelector(targetId);
-                if (targetElement) {
-                    window.scrollTo({
-                        top: targetElement.offsetTop - 80,
-                        behavior: 'smooth'
-                    });
+            <div class="grid-2 mb-6">
+                <div class="gs-reveal-p6">
+                    <h3 class="title-medium epoch-accent">Крах «Государства благоденствия»</h3>
+                    <p>В 1970-х экономический кризис, инфляция, безработица и нефтяной шок уничтожили стабильность. Кейнсианская модель перестала работать.</p>
                     
-                    // Close mobile menu if open
-                    document.querySelector('.nav-links').classList.remove('active');
-                }
-            });
-        });
+                    <h3 class="title-medium epoch-sub mt-4">Реформы Ширака (1986–1988)</h3>
+                    <p>Приход правых к власти ознаменовал французский вариант реформ Тэтчер и Рейгана — синтез консерватизма и либерализма. Но во Франции они были мягче.</p>
+                    
+                    <ul class="list-p6 mt-4">
+                        <li>⚡ Сокращение роли государства</li>
+                        <li>⚡ Денационализация (продано 65 гигантов экономики)</li>
+                        <li>⚡ Дерегламентация (отмена контроля над ценами)</li>
+                    </ul>
+                </div>
+                <!-- Фото: La Defense, Стекло, Скорость -->
+                <div class="photo-placeholder gs-reveal-p6" style="background-image: url('https://avatars.mds.yandex.net/i?id=0a056bea4dbb136799d4e2daeb1abd87263a945b-3380069-images-thumbs&n=13');">
+                    <div class="photo-caption">Деловой район La Défense. Стекло, бетон, биржевые графики и корпоративная динамика.</div>
+                </div>
+            </div>
 
-        // Tab functionality
-        const tabBtns = document.querySelectorAll('.tab-btn');
-        tabBtns.forEach(btn => {
-            btn.addEventListener('click', () => {
-                // Remove active class from all buttons and contents
-                tabBtns.forEach(b => b.classList.remove('active'));
-                document.querySelectorAll('.tab-content').forEach(content => {
-                    content.classList.remove('active');
-                });
-                
-                // Add active class to clicked button and corresponding content
-                btn.classList.add('active');
-                const tabId = btn.getAttribute('data-tab');
-                document.getElementById(tabId).classList.add('active');
-            });
-        });
+            <!-- ВЗГЛЯДЫ 3 -->
+            <div class="grid-3 mt-8 views-container">
+                <div class="view-card view-citizen gs-reveal-p6">
+                    <h4 class="tracking-widest mb-1 text-sm">👁 Обычный гражданин</h4>
+                    <p class="text-sm" style="margin: 0;">«Эпоха гарантий закончилась. Мой завод приватизировали. Зато я могу купить акции. Жизнь стала динамичнее, но опаснее».</p>
+                </div>
+                <div class="view-card view-power gs-reveal-p6">
+                    <h4 class="tracking-widest mb-1 text-sm">👁 Человек у власти</h4>
+                    <p class="text-sm" style="margin: 0;">«Государство должно перестать быть нянькой. Мы освобождаем энергию бизнеса. Только свободный рынок повысит конкурентоспособность».</p>
+                </div>
+                <div class="view-card view-world gs-reveal-p6">
+                    <h4 class="tracking-widest mb-1 text-sm">👁 Взгляд из других стран</h4>
+                    <p class="text-sm" style="margin: 0;">«Франция сдалась рыночной логике. Это конец "французского исключения". Они становятся частью глобальной экономики».</p>
+                </div>
+            </div>
+        </div>
+    </section>
 
-        // Charts
-        // Settlement Chart
-        const settlementCtx = document.getElementById('settlementChart').getContext('2d');
-        const settlementChart = new Chart(settlementCtx, {
-            type: 'bar',
-            data: {
-                labels: ['1954', '1955', '1956', '1957', '1958', '1959', '1960'],
-                datasets: [{
-                    label: 'Освоено земель (млн га)',
-                    data: [6.5, 14.3, 18.2, 21.5, 23.8, 24.6, 25.1],
-                    backgroundColor: '#e6b325',
-                    borderColor: '#d4a320',
-                    borderWidth: 1
-                }]
-            },
-            options: {
-                responsive: true,
-                plugins: {
-                    title: {
-                        display: true,
-                        text: 'Динамика освоения целинных земель в Казахстане'
-                    }
-                },
-                scales: {
-                    y: {
-                        beginAtZero: true,
-                        title: {
-                            display: true,
-                            text: 'Млн гектаров'
-                        }
-                    }
-                }
-            }
-        });
-
-        // Harvest Chart
-        const harvestCtx = document.getElementById('harvestChart').getContext('2d');
-        const harvestChart = new Chart(harvestCtx, {
-            type: 'line',
-            data: {
-                labels: ['1953', '1954', '1955', '1956', '1957', '1958', '1959', '1960', '1961', '1962', '1963', '1964', '1965'],
-                datasets: [{
-                    label: 'Валовой сбор зерна (млн тонн)',
-                    data: [82, 85, 103, 125, 105, 134, 120, 125, 130, 110, 107, 125, 121],
-                    borderColor: '#27ae60',
-                    backgroundColor: 'rgba(39, 174, 96, 0.1)',
-                    fill: true,
-                    tension: 0.3
-                }, {
-                    label: 'Урожайность (ц/га)',
-                    data: [7.8, 8.1, 8.3, 9.8, 8.5, 9.2, 8.7, 8.9, 9.1, 8.4, 7.9, 9.0, 8.8],
-                    borderColor: '#e74c3c',
-                    backgroundColor: 'rgba(231, 76, 60, 0.1)',
-                    fill: true,
-                    tension: 0.3
-                }]
-            },
-            options: {
-                responsive: true,
-                plugins: {
-                    title: {
-                        display: true,
-                        text: 'Урожайность и валовые сборы зерна в Казахстане'
-                    }
-                },
-                scales: {
-                    y: {
-                        beginAtZero: false,
-                        title: {
-                            display: true,
-                            text: 'Млн тонн / ц/га'
-                        }
-                    }
-                }
-            }
-        });
-
-        // Navbar background on scroll
-        window.addEventListener('scroll', function() {
-            const navbar = document.querySelector('.nav-container');
-            if (window.scrollY > 100) {
-                navbar.style.backgroundColor = 'rgba(44, 62, 80, 0.98)';
-            } else {
-                navbar.style.backgroundColor = 'rgba(44, 62, 80, 0.95)';
-            }
-        });
-
-        // --- Chatbot Functionality ---
-        const openChatbotBtn = document.getElementById('open-chatbot-btn');
-        const closeChatbotBtn = document.getElementById('close-chatbot-btn');
-        const chatbotModalOverlay = document.getElementById('chatbot-modal-overlay');
-        const chatInput = document.getElementById('chat-input');
-        const sendBtn = document.getElementById('send-btn');
-        const chatMessages = document.getElementById('chat-messages');
-        const voiceInputBtn = document.getElementById('voice-input-btn');
-        const recognition = new (window.SpeechRecognition || window.webkitSpeechRecognition)();
-        
-        // Chat history for context
-        let chatHistory = [{
-            role: "user",
-            parts: [{ text: "Здравствуйте, я хотел бы задать несколько вопросов о целине. Вы можете ответить?" }]
-        }, {
-            role: "model",
-            parts: [{ text: "Здравствуйте! Я искусственный интеллект, обученный на данных о целине. Спросите меня о чем-нибудь!" }]
-        }];
-
-        // Open chatbot modal
-        openChatbotBtn.addEventListener('click', () => {
-            chatbotModalOverlay.style.display = 'flex';
-        });
-
-        // Close chatbot modal
-        closeChatbotBtn.addEventListener('click', () => {
-            chatbotModalOverlay.style.display = 'none';
-        });
-
-        // Function to show typing indicator
-        function showLoadingIndicator() {
-            const dots = document.createElement('div');
-            dots.id = 'loading-dots';
-            dots.className = 'loading-dots';
-            dots.style.display = 'block';
-            dots.innerHTML = '<span class="loading-dot"></span><span class="loading-dot"></span><span class="loading-dot"></span>';
-            chatMessages.appendChild(dots);
-            chatMessages.scrollTop = chatMessages.scrollHeight;
-        }
-
-        // Function to hide typing indicator
-        function hideLoadingIndicator() {
-            const dots = document.getElementById('loading-dots');
-            if (dots) {
-                dots.style.display = 'none';
-                dots.remove();
-            }
-        }
-        
-        // Function to append a message to the chat window
-        function appendMessage(sender, text) {
-            const messageElement = document.createElement('div');
-            messageElement.classList.add('chat-message');
-            messageElement.classList.add(sender === 'user' ? 'user-message' : 'ai-message');
-            messageElement.innerHTML = text.replace(/\n/g, '<br>'); // Handle newlines
-            chatMessages.appendChild(messageElement);
-            chatMessages.scrollTop = chatMessages.scrollHeight;
-        }
-        
-        // Handle sending a message
-        async function sendMessage() {
-            const userMessage = chatInput.value.trim();
-            if (userMessage === '') return;
+    <!-- ИНТЕРАКТИВ: БАШНЯ ЭПОХ -->
+    <section class="section-padding gs-section" data-theme="theme-intro" id="tower-interactive">
+        <div class="container text-center fade-container">
+            <h2 class="title-large serif mb-4">Интерактив: Башня и энергия эпох</h2>
+            <p class="mb-8" style="color: #aaa;">Чтобы получить доступ к знанию — нужно вложить энергию.</p>
             
-            appendMessage('user', userMessage);
-            chatHistory.push({ role: "user", parts: [{ text: userMessage }] });
-            chatInput.value = '';
-            showLoadingIndicator();
+            <div id="tower-box" onclick="requestDeviceMotion()">
+                <div id="tower-icon">🗼</div>
+                <p id="tower-instruction">Нажмите сюда, а затем потрясите телефон 15 раз</p>
+                <p id="shake-count" class="text-xl mt-2 font-bold text-gray-400">0 / 15</p>
+            </div>
 
-            try {
-                const response = await fetch(API_URL, {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({
-                        contents: chatHistory,
-                        tools: [{ "google_search": {} }],
-                        systemInstruction: {
-                            parts: [{ text: "You are a helpful assistant for answering questions about the Virgin Lands Campaign (Целина) in Kazakhstan. Your answers should be based on the provided text and knowledge of the topic. Answer in Russian." }]
-                        },
-                    })
-                });
+            <div id="video-container" style="display:none; margin-top:3rem;">
+                <!-- Локальный файл видео (нужно положить video.mp4 в папку с сайтом) -->
+                <video id="secret-video" width="100%" style="border-radius: 8px; box-shadow: 0 10px 30px rgba(0,0,0,0.5);" controls>
+                    <source src="./Строительство Эйфелевой башни l Эйфель (2021).mp4" type="video/mp4">
+                </video>
+                <p id="video-timer" class="mt-4 text-xl" style="color: #D62828; font-weight: bold;">Осталось 30 секунд</p>
+            </div>
+        </div>
+    </section>
 
-                if (!response.ok) {
-                    throw new Error(`HTTP error! status: ${response.status}`);
+    <!-- ИДЕАЛЬНЫЙ ФИНАЛ -->
+    <section class="finale-section gs-section" data-theme="theme-intro" id="finale">
+        <div class="container fade-container" style="max-width: 1000px; padding-top: 10vh;">
+            <div class="finale-line"></div>
+            
+            <h2 class="finale-phrase serif gs-finale">Баланс между государством и рынком определяет устойчивость общества</h2>
+            
+            <div class="finale-names gs-finale-delayed">
+                <span>Ренард</span>
+                <span>Диана</span>
+                <span>Рамина</span>
+                <span>Акижан</span>
+                <span>Карина</span>
+            </div>
+            
+            <div class="finale-credits gs-finale-delayed">
+                Проект учеников 9Б класса
+            </div>
+        </div>
+    </section>
+
+    <!-- СКРИПТЫ АНИМАЦИИ И ЛОГИКИ -->
+    <script>
+        gsap.registerPlugin(ScrollTrigger);
+
+        const badge = document.getElementById('era-badge');
+        // Фиксируем бейдж по центру экрана один раз, без CSS-конфликтов
+        gsap.set(badge, { yPercent: -50 });
+
+        // 1. ИНДИКАТОР ПРОГРЕССА СВЕРХУ
+        window.addEventListener('scroll', () => {
+            const winScroll = document.body.scrollTop || document.documentElement.scrollTop;
+            const height = document.documentElement.scrollHeight - document.documentElement.clientHeight;
+            const scrolled = (winScroll / height) * 100;
+            document.getElementById("progress-bar").style.width = scrolled + "%";
+        });
+
+        // 2. БАЗОВЫЕ ПОЯВЛЕНИЯ (Интро)
+        gsap.utils.toArray('.gs-reveal').forEach(el => {
+            gsap.fromTo(el, 
+                { y: 30, opacity: 0 },
+                { y: 0, opacity: 1, duration: 1.2, ease: "power2.out",
+                  scrollTrigger: { trigger: el, start: "top 85%" }
                 }
+            );
+        });
 
-                const result = await response.json();
-                const aiResponse = result?.candidates?.[0]?.content?.parts?.[0]?.text || "Извините, я не могу ответить на этот вопрос сейчас.";
+        // 3. АРХИТЕКТУРА ОЩУЩЕНИЯ (Разные стили анимации для разных эпох)
+        
+        // IV Республика (Jitter, легкая нестабильность)
+        gsap.utils.toArray('.gs-reveal-p1').forEach(el => {
+            gsap.fromTo(el,
+                { y: 40, opacity: 0, rotation: 1 },
+                { y: 0, opacity: 1, rotation: 0, duration: 1.5, ease: "rough({ template: power1.out, strength: 0.5, points: 10, taper: 'out', randomize: true })",
+                  scrollTrigger: { trigger: el, start: "top 85%" }
+                }
+            );
+        });
+
+        // V Республика (Монументально, массивно, плавно)
+        gsap.utils.toArray('.gs-reveal-p2').forEach(el => {
+            gsap.fromTo(el,
+                { y: 60, opacity: 0, scale: 0.95 },
+                { y: 0, opacity: 1, scale: 1, duration: 1.8, ease: "power3.out",
+                  scrollTrigger: { trigger: el, start: "top 85%" }
+                }
+            );
+        });
+
+        // Неоконсерватизм (Быстро, резко, по сетке)
+        gsap.utils.toArray('.gs-reveal-p6').forEach(el => {
+            gsap.fromTo(el,
+                { x: -30, opacity: 0 },
+                { x: 0, opacity: 1, duration: 0.6, ease: "expo.out", stagger: 0.1,
+                  scrollTrigger: { trigger: el, start: "top 85%" }
+                }
+            );
+        });
+
+        // SUBTLE PARALLAX ДЛЯ ФОТОГРАФИЙ
+        gsap.utils.toArray('.photo-placeholder').forEach(photo => {
+            gsap.to(photo, {
+                y: -60,
+                scrollTrigger: {
+                    trigger: photo,
+                    scrub: true
+                }
+            });
+        });
+
+        // 4. КОСТЮМНАЯ АНИМАЦИЯ И СМЕНА ТЕМ
+        const sections = document.querySelectorAll('.gs-section');
+        
+        // Настройки состояния бейджа
+        const badgeStates = {
+            'theme-intro': { text: '', opacity: 0, scale: 0.5, bg: 'transparent', border: 'transparent', shadow: 'none', radius: '50%' },
+            'theme-p1': { text: 'IV', opacity: 1, scale: 1, rotate: -5, border: '#8D3B3B', shadow: '0 0 20px rgba(141,59,59,0.8)', bg: 'transparent', radius: '50%', color: '#8D3B3B' }, 
+            'theme-p2': { text: 'V', opacity: 1, scale: 1.3, rotate: 0, border: '#C6A75E', shadow: '0 0 40px rgba(198,167,94,0.9)', bg: 'transparent', radius: '50%', color: '#C6A75E' }, 
+            'theme-p6': { text: '80s', opacity: 1, scale: 0.9, rotate: 0, border: 'transparent', shadow: '0 0 15px rgba(214,40,40,1)', bg: '#D62828', radius: '8px', color: '#FFF' } 
+        };
+
+        sections.forEach((section) => {
+            ScrollTrigger.create({
+                trigger: section,
+                start: "top 50%", 
+                end: "bottom 50%",
+                onEnter: () => activateTheme(section.dataset.theme),
+                onEnterBack: () => activateTheme(section.dataset.theme)
+            });
+
+            // 5. ЭФФЕКТ ЗАТЕМНЕНИЯ ТЕКСТА ПРИ УХОДЕ ЭПОХИ
+            const fadeContainer = section.querySelector('.fade-container');
+            if(fadeContainer) {
+                gsap.to(fadeContainer, {
+                    opacity: 0.1,
+                    scrollTrigger: {
+                        trigger: section,
+                        start: "bottom 50%", // начинает тускнеть, когда низ секции доходит до середины экрана
+                        end: "bottom top",
+                        scrub: true
+                    }
+                });
+            }
+        });
+
+        function activateTheme(themeName) {
+            document.body.className = themeName;
+            
+            const state = badgeStates[themeName];
+            if(state) {
+                if(state.text) badge.innerText = state.text;
                 
-                hideLoadingIndicator();
-                appendMessage('ai', aiResponse);
-                chatHistory.push({ role: "model", parts: [{ text: aiResponse }] });
+                // CSS Transitions отрабатывают цвета и тени
+                badge.style.opacity = state.opacity;
+                badge.style.borderColor = state.border;
+                badge.style.boxShadow = state.shadow;
+                badge.style.backgroundColor = state.bg;
+                badge.style.borderRadius = state.radius;
+                badge.style.color = state.color;
+
+                // GSAP управляет трансформацией (scale, rotate, jitter)
+                gsap.killTweensOf(badge); // Очищаем предыдущие анимации
                 
-            } catch (error) {
-                console.error("Error fetching data:", error);
-                hideLoadingIndicator();
-                appendMessage('ai', "Произошла ошибка при получении ответа. Пожалуйста, попробуйте еще раз.");
+                if(themeName === 'theme-p1') {
+                    // Контролируемый Jitter для 4-й республики
+                    gsap.to(badge, { 
+                        scale: state.scale, rotation: state.rotate, duration: 0.5,
+                        onComplete: () => {
+                            gsap.to(badge, { 
+                                x: 2, 
+                                y: 1, 
+                                rotation: -6, 
+                                repeat: -1, 
+                                yoyo: true, 
+                                duration: 0.15, 
+                                ease: "sine.inOut" 
+                            });
+                        }
+                    });
+                } else {
+                    // Сбрасываем X/Y и плавно применяем новый scale/rotate
+                    gsap.to(badge, { x: 0, y: 0, scale: state.scale, rotation: state.rotate, duration: 0.6, ease: "power2.out" });
+                }
             }
         }
-        
-        sendBtn.addEventListener('click', sendMessage);
-        chatInput.addEventListener('keypress', (e) => {
-            if (e.key === 'Enter') {
-                sendMessage();
-            }
-        });
-        
-        // Voice input
-        let isListening = false;
-        recognition.lang = 'ru-RU';
-        recognition.interimResults = false;
-        recognition.maxAlternatives = 1;
-        
-        voiceInputBtn.addEventListener('click', () => {
-            if (isListening) {
-                recognition.stop();
-                voiceInputBtn.style.color = '';
-                voiceInputBtn.querySelector('i').className = 'fas fa-microphone';
-            } else {
-                recognition.start();
-                voiceInputBtn.style.color = 'red';
-                voiceInputBtn.querySelector('i').className = 'fas fa-microphone-slash';
-            }
-        });
-        
-        recognition.onstart = () => {
-            isListening = true;
-            console.log("Голосовой ввод активирован...");
-        };
-        
-        recognition.onresult = (event) => {
-            const speechResult = event.results[0][0].transcript;
-            chatInput.value = speechResult;
-            sendMessage();
-        };
-        
-        recognition.onend = () => {
-            isListening = false;
-            voiceInputBtn.style.color = '';
-            voiceInputBtn.querySelector('i').className = 'fas fa-microphone';
-        };
-        
-        recognition.onerror = (event) => {
-            console.error("Ошибка голосового ввода:", event.error);
-            isListening = false;
-            voiceInputBtn.style.color = '';
-            voiceInputBtn.querySelector('i').className = 'fas fa-microphone';
-            appendMessage('ai', "Извините, произошла ошибка голосового ввода.");
-        };
 
+        // 6. ИДЕАЛЬНЫЙ ФИНАЛ (Линия и появление текста)
+        gsap.to('.finale-line', {
+            width: "300px",
+            duration: 2,
+            scrollTrigger: {
+                trigger: '#finale',
+                start: "top 70%"
+            }
+        });
+
+        gsap.fromTo('.gs-finale', 
+            { opacity: 0, filter: "blur(10px)", y: 20 },
+            { opacity: 1, filter: "blur(0px)", y: 0, duration: 2.5, ease: "power1.inOut",
+              scrollTrigger: { trigger: '#finale', start: "top 60%" }
+            }
+        );
+        gsap.fromTo('.gs-finale-delayed span, .gs-finale-delayed', 
+            { opacity: 0, y: 10 },
+            { opacity: 1, y: 0, duration: 1.5, stagger: 0.2, ease: "power2.out", delay: 1.5,
+              scrollTrigger: { trigger: '#finale', start: "top 60%" }
+            }
+        );
+
+
+        // ==========================================
+        // ЛОГИКА ИНТЕРАКТИВА "БАШНЯ ЭПОХ" (ТРЯСКА)
+        // ==========================================
+        let shakeCount = 0;
+        const requiredShakes = 15;
+        let lastUpdate = 0;
+        const threshold = 15; 
+        let motionListenerAdded = false;
+
+        const countDisplay = document.getElementById("shake-count");
+        const instruction = document.getElementById("tower-instruction");
+        const videoContainer = document.getElementById("video-container");
+        const video = document.getElementById("secret-video");
+        const timerDisplay = document.getElementById("video-timer");
+        const towerIcon = document.getElementById("tower-icon");
+
+        function handleMotion(event) {
+            const acceleration = event.accelerationIncludingGravity;
+            if (!acceleration) return;
+
+            const total = Math.abs(acceleration.x || 0) + Math.abs(acceleration.y || 0) + Math.abs(acceleration.z || 0);
+            const now = Date.now();
+
+            if (total > threshold && now - lastUpdate > 300) {
+                shakeCount++;
+                lastUpdate = now;
+                updateShakeUI();
+
+                if (shakeCount >= requiredShakes) {
+                    window.removeEventListener("devicemotion", handleMotion);
+                    motionListenerAdded = false;
+                    unlockVideo();
+                }
+            }
+        }
+
+        function updateShakeUI() {
+            countDisplay.textContent = shakeCount + " / " + requiredShakes;
+            // Анимация и свечение иконки при тряске/клике
+            towerIcon.style.transform = "rotate(" + (Math.random()*20-10) + "deg) scale(1.1)";
+            towerIcon.style.textShadow = "0 0 " + (shakeCount * 3) + "px rgba(255, 255, 255, 0.8)";
+            
+            // Вибрация (если поддерживается устройством)
+            if (navigator.vibrate) navigator.vibrate(50);
+
+            setTimeout(() => {
+                towerIcon.style.transform = "rotate(0deg) scale(1)";
+            }, 150);
+        }
+
+        function requestDeviceMotion() {
+            if (shakeCount >= requiredShakes) return; // Не даем кликать, пока открыто видео
+
+            // Для iOS 13+ требуется запрос разрешения
+            if (typeof DeviceMotionEvent !== 'undefined' && typeof DeviceMotionEvent.requestPermission === 'function') {
+                DeviceMotionEvent.requestPermission().then(permissionState => {
+                    if (permissionState === 'granted') {
+                        if(!motionListenerAdded) {
+                            window.addEventListener("devicemotion", handleMotion);
+                            motionListenerAdded = true;
+                        }
+                        instruction.textContent = "Отлично! Теперь трясите телефон!";
+                    } else {
+                        instruction.textContent = "Доступ запрещен. Кликайте по башне!";
+                        fallbackClick();
+                    }
+                }).catch(console.error);
+            } else {
+                // Для остальных мобильных устройств и десктопа
+                if(!motionListenerAdded && window.DeviceMotionEvent) {
+                    window.addEventListener("devicemotion", handleMotion);
+                    motionListenerAdded = true;
+                }
+                instruction.textContent = "Трясите телефон (или кликайте 15 раз, если вы с ПК)!";
+                fallbackClick();
+            }
+        }
+
+        // Резервный вариант для тестирования на ПК (клик вместо тряски)
+        function fallbackClick() {
+            if (shakeCount >= requiredShakes) return; // Предотвращаем лишние клики
+            
+            shakeCount++;
+            updateShakeUI();
+            if (shakeCount >= requiredShakes) {
+                if (motionListenerAdded) {
+                    window.removeEventListener("devicemotion", handleMotion);
+                    motionListenerAdded = false;
+                }
+                unlockVideo();
+            }
+        }
+
+        function unlockVideo() {
+            instruction.textContent = "Доступ открыт. Смотрите видео!";
+            instruction.style.color = "#C6A75E";
+            document.getElementById("tower-box").style.borderColor = "#C6A75E";
+            
+            videoContainer.style.display = "block";
+            // Небольшая задержка для плавного появления
+            setTimeout(() => {
+                videoContainer.style.opacity = 1;
+                ScrollTrigger.refresh(); // Обновляем триггеры после изменения высоты
+            }, 100);
+            
+            video.play().catch(e => console.log("Автовоспроизведение заблокировано браузером", e));
+            startTimer(30);
+        }
+
+        function startTimer(seconds) {
+            let remaining = seconds;
+            timerDisplay.textContent = "Осталось " + remaining + " секунд";
+
+            const interval = setInterval(() => {
+                remaining--;
+                timerDisplay.textContent = "Осталось " + remaining + " секунд";
+
+                if (remaining <= 0) {
+                    clearInterval(interval);
+                    video.pause();
+                    
+                    // Скрываем контейнер с видео
+                    videoContainer.style.opacity = 0;
+                    setTimeout(() => {
+                        videoContainer.style.display = "none";
+                        ScrollTrigger.refresh();
+                    }, 800);
+                    
+                    // Обновляем текст инструкции и позволяем продолжить
+                    instruction.textContent = "Энергия исчерпана. Потрясите еще 15 раз для продолжения!";
+                    instruction.style.color = "#D62828";
+                    document.getElementById("tower-box").style.borderColor = "#444";
+                    towerIcon.style.textShadow = "none";
+                    
+                    // СБРАСЫВАЕМ СЧЕТЧИК, чтобы можно было продолжить просмотр с того же места
+                    shakeCount = 0;
+                    updateShakeUI();
+                }
+            }, 1000);
+        }
+
+        // Обязательный рефреш триггеров после сборки DOM
+        ScrollTrigger.refresh();
     </script>
 </body>
 </html>
