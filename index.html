@@ -463,7 +463,7 @@
     <!-- Firebase SDK -->
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
-        import { getAuth, signInAnonymously, onAuthStateChanged, signOut, sendSignInLinkToEmail, isSignInWithEmailLink, signInWithEmailLink, signInWithPhoneNumber, RecaptchaVerifier } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
+        import { getAuth, signInAnonymously } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
         import { 
             getFirestore, 
             collection, 
@@ -479,9 +479,7 @@
             increment,
             setDoc,
             serverTimestamp,
-            runTransaction,
-            getDocs,
-            where
+            runTransaction
         } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
         import { getStorage, ref, uploadBytes, getDownloadURL } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-storage.js";
 
@@ -497,9 +495,7 @@
 
         const apiKey = "AIzaSyAjbUIoFyWSpAv_VKjrip_UQ24C8CCVeBg"; // Gemini API Key will be injected by the environment
 
-        let app, db, auth, userId, isAdminLoggedIn = false, deviceId = null;
-        let storage, currentFirebaseUser = null, isRegistered = false;
-        let recaptchaVerifier, confirmationResult, emailForSignIn = null;
+        let app, db, auth, storage, userId, isAdminLoggedIn = false, deviceId = null;
         let currentFeedFilter = 'new';
 
         const getDeviceId = () => {
@@ -531,27 +527,6 @@
         const filterNewBtn = document.getElementById('filter-new');
         const filterPopularBtn = document.getElementById('filter-popular');
         const filterDiscussedBtn = document.getElementById('filter-discussed');
-
-        // --- New UI elements for auth ---
-        const loginBtn = document.getElementById('login-btn');
-        const userInfoSpan = document.getElementById('user-info');
-        const registrationModal = document.getElementById('registration-modal');
-        const closeRegModal = document.getElementById('close-reg-modal');
-        const regMethod = document.getElementById('reg-method');
-        const regCredential = document.getElementById('reg-credential');
-        const sendCodeBtn = document.getElementById('send-code-btn');
-        const codeSection = document.getElementById('code-section');
-        const regCode = document.getElementById('reg-code');
-        const verifyCodeBtn = document.getElementById('verify-code-btn');
-        const regMessage = document.getElementById('reg-message');
-        const finishEmailSignInBtn = document.getElementById('finish-email-signin');
-
-        // --- Admin users tab elements ---
-        const adminTabTickets = document.getElementById('admin-tab-tickets');
-        const adminTabUsers = document.getElementById('admin-tab-users');
-        const adminTicketsWrapper = document.getElementById('admin-tickets-wrapper');
-        const adminUsersWrapper = document.getElementById('admin-users-wrapper');
-        const adminUsersContainer = document.getElementById('admin-users-container');
 
         // --- Utility Functions ---
         const escapeHTML = (str) => {
@@ -677,26 +652,20 @@
             return { allowed: true };
         };
 
-        // --- Check if user is banned ---
-        const checkIfBanned = async (uid) => {
-            try {
-                const userDoc = await getDoc(doc(db, 'users', uid));
-                return userDoc.exists() && userDoc.data().banned === true;
-            } catch (e) {
-                return false;
+        // --- Image upload helper ---
+        const uploadImage = async (file, folder) => {
+            if (!file) return null;
+            if (!file.type.startsWith('image/')) {
+                throw new Error('Файл должен быть изображением');
             }
-        };
-
-        // --- Update Auth UI ---
-        const updateAuthUI = () => {
-            if (currentFirebaseUser && !currentFirebaseUser.isAnonymous) {
-                loginBtn.classList.add('hidden');
-                userInfoSpan.classList.remove('hidden');
-                userInfoSpan.textContent = currentFirebaseUser.email || currentFirebaseUser.phoneNumber || 'Пользователь';
-            } else {
-                loginBtn.classList.remove('hidden');
-                userInfoSpan.classList.add('hidden');
+            if (file.size > 5 * 1024 * 1024) {
+                throw new Error('Максимальный размер 5 МБ');
             }
+            const fileName = `${Date.now()}_${deviceId}_${file.name}`;
+            const storageRef = ref(storage, `${folder}/${fileName}`);
+            await uploadBytes(storageRef, file);
+            const url = await getDownloadURL(storageRef);
+            return url;
         };
 
         // --- Initialization ---
@@ -705,162 +674,18 @@
                 deviceId = getDeviceId();
                 app = initializeApp(firebaseConfig);
                 db = getFirestore(app);
-                auth = getAuth(app);
                 storage = getStorage(app);
+                auth = getAuth(app);
                 await signInAnonymously(auth);
                 userId = auth.currentUser ? auth.currentUser.uid : deviceId;
                 
-                // Listen to auth state
-                onAuthStateChanged(auth, async (user) => {
-                    currentFirebaseUser = user;
-                    if (user && !user.isAnonymous) {
-                        isRegistered = true;
-                        const banned = await checkIfBanned(user.uid);
-                        if (banned) {
-                            alertModal("Ваш аккаунт заблокирован");
-                            signOut(auth);
-                        }
-                    } else {
-                        isRegistered = false;
-                    }
-                    updateAuthUI();
-                });
-
                 setupEventListeners();
                 setupFeedFilters();
                 listenForPosts();
                 loadGameRooms();
-                setupAuthUI();
             } catch (error) {
                 console.error("Init Error:", error);
                 postsContainer.innerHTML = '<p class="font-mono text-red-500 p-4">СИСТЕМНАЯ ОШИБКА: НЕТ СЕТИ</p>';
-            }
-        };
-
-        // --- Setup Auth UI event listeners ---
-        const setupAuthUI = () => {
-            loginBtn.addEventListener('click', () => {
-                registrationModal.classList.remove('hidden');
-            });
-            closeRegModal.addEventListener('click', () => {
-                registrationModal.classList.add('hidden');
-                resetRegModal();
-            });
-            sendCodeBtn.addEventListener('click', handleSendCode);
-            verifyCodeBtn.addEventListener('click', handleVerifyCode);
-            if (finishEmailSignInBtn) {
-                finishEmailSignInBtn.addEventListener('click', handleFinishEmailSignIn);
-            }
-        };
-
-        const resetRegModal = () => {
-            regCredential.value = '';
-            regCode.value = '';
-            codeSection.classList.add('hidden');
-            regMessage.textContent = '';
-            if (finishEmailSignInBtn) finishEmailSignInBtn.classList.add('hidden');
-        };
-
-        // --- Handle Send Code (Email or Phone) ---
-        const handleSendCode = async () => {
-            const method = regMethod.value;
-            const credential = regCredential.value.trim();
-            if (!credential) {
-                regMessage.textContent = 'Введите email или номер телефона';
-                return;
-            }
-
-            regMessage.textContent = 'Отправка...';
-
-            try {
-                if (method === 'email') {
-                    // Email link sign-in – не работает при локальном открытии файла (file://)
-                    if (window.location.protocol === 'file:') {
-                        regMessage.textContent = 'Email регистрация не поддерживается при открытии файла локально. Используйте телефон или разверните сайт на сервере.';
-                        return;
-                    }
-
-                    const actionCodeSettings = {
-                        url: window.location.href,  // должно быть разрешено в консоли Firebase
-                        handleCodeInApp: true
-                    };
-                    await sendSignInLinkToEmail(auth, credential, actionCodeSettings);
-                    emailForSignIn = credential;
-                    localStorage.setItem('emailForSignIn', credential);
-                    regMessage.textContent = 'Ссылка для входа отправлена на email. Перейдите по ней, затем нажмите "Завершить вход"';
-                    if (finishEmailSignInBtn) finishEmailSignInBtn.classList.remove('hidden');
-                    codeSection.classList.add('hidden');
-                } else {
-                    // Phone number
-                    if (!recaptchaVerifier) {
-                        recaptchaVerifier = new RecaptchaVerifier(auth, 'send-code-btn', {
-                            size: 'invisible'
-                        });
-                    }
-                    confirmationResult = await signInWithPhoneNumber(auth, credential, recaptchaVerifier);
-                    codeSection.classList.remove('hidden');
-                    regMessage.textContent = 'Код отправлен. Введите его ниже.';
-                    if (finishEmailSignInBtn) finishEmailSignInBtn.classList.add('hidden');
-                }
-            } catch (error) {
-                regMessage.textContent = 'Ошибка: ' + error.message;
-                console.error(error);
-            }
-        };
-
-        // --- Handle Verify Code (Phone) ---
-        const handleVerifyCode = async () => {
-            const code = regCode.value.trim();
-            if (!code) {
-                regMessage.textContent = 'Введите код';
-                return;
-            }
-            try {
-                const result = await confirmationResult.confirm(code);
-                const user = result.user;
-                // Save user data to Firestore
-                await setDoc(doc(db, 'users', user.uid), {
-                    uid: user.uid,
-                    phoneNumber: user.phoneNumber,
-                    email: user.email || null,
-                    createdAt: serverTimestamp(),
-                    banned: false,
-                    deviceId: deviceId
-                }, { merge: true });
-                registrationModal.classList.add('hidden');
-                resetRegModal();
-                alertModal('Регистрация успешна!');
-            } catch (error) {
-                regMessage.textContent = 'Неверный код';
-            }
-        };
-
-        // --- Handle Finish Email Sign In ---
-        const handleFinishEmailSignIn = async () => {
-            if (!isSignInWithEmailLink(auth, window.location.href)) {
-                regMessage.textContent = 'Ссылка для входа недействительна';
-                return;
-            }
-            let email = localStorage.getItem('emailForSignIn');
-            if (!email) {
-                email = prompt('Пожалуйста, введите ваш email для подтверждения');
-            }
-            try {
-                const result = await signInWithEmailLink(auth, email, window.location.href);
-                localStorage.removeItem('emailForSignIn');
-                const user = result.user;
-                await setDoc(doc(db, 'users', user.uid), {
-                    uid: user.uid,
-                    email: user.email,
-                    createdAt: serverTimestamp(),
-                    banned: false,
-                    deviceId: deviceId
-                }, { merge: true });
-                registrationModal.classList.add('hidden');
-                resetRegModal();
-                alertModal('Регистрация успешна!');
-            } catch (error) {
-                regMessage.textContent = 'Ошибка: ' + error.message;
             }
         };
 
@@ -1990,10 +1815,7 @@
                 if (adminClickCount >= 5) {
                     adminClickCount = 0;
                     adminPanelModal.classList.remove('hidden');
-                    if (isAdminLoggedIn) {
-                        listenForSupportTickets();
-                        loadAdminUsers();
-                    }
+                    if (isAdminLoggedIn) listenForSupportTickets();
                 }
             });
 
@@ -2004,20 +1826,14 @@
             document.getElementById('nav-feed').addEventListener('click', () => showSection('feed'));
             document.getElementById('nav-games').addEventListener('click', () => showSection('games'));
 
-            // Admin tabs
-            adminTabTickets.addEventListener('click', () => {
-                adminTabTickets.classList.add('tab-active');
-                adminTabUsers.classList.remove('tab-active');
-                adminTicketsWrapper.classList.remove('hidden');
-                adminUsersWrapper.classList.add('hidden');
-            });
-            adminTabUsers.addEventListener('click', () => {
-                adminTabUsers.classList.add('tab-active');
-                adminTabTickets.classList.remove('tab-active');
-                adminUsersWrapper.classList.remove('hidden');
-                adminTicketsWrapper.classList.add('hidden');
-                if (isAdminLoggedIn) loadAdminUsers();
-            });
+            // Post image input handler
+            const postImageInput = document.getElementById('post-image');
+            if (postImageInput) {
+                postImageInput.addEventListener('change', function(e) {
+                    const fileName = e.target.files[0] ? e.target.files[0].name : '';
+                    document.getElementById('post-image-name').textContent = fileName;
+                });
+            }
         };
 
         const showSection = (section) => {
@@ -2088,49 +1904,6 @@
             } else {
                 alertModal("ОТКАЗАНО В ДОСТУПЕ");
                 document.getElementById('admin-password').value = '';
-            }
-        };
-
-        // --- Admin Users Management ---
-        const loadAdminUsers = async () => {
-            if (!isAdminLoggedIn || !db) return;
-            const usersSnapshot = await getDocs(collection(db, 'users'));
-            const usersContainer = document.getElementById('admin-users-container');
-            usersContainer.innerHTML = '';
-            if (usersSnapshot.empty) {
-                usersContainer.innerHTML = '<p class="font-mono text-xs text-gray-500 text-center">НЕТ ПОЛЬЗОВАТЕЛЕЙ</p>';
-                return;
-            }
-            usersSnapshot.forEach(docSnap => {
-                const user = docSnap.data();
-                const userId = docSnap.id;
-                const userEl = document.createElement('div');
-                userEl.className = 'p-4 border border-gray-800 mb-2 bg-black';
-                userEl.innerHTML = `
-                    <div class="flex justify-between font-mono text-xs mb-2">
-                        <span>ID: ${userId.substring(0, 8)}</span>
-                        <span class="${user.banned ? 'text-red-500' : 'text-green-500'}">${user.banned ? 'ЗАБЛОКИРОВАН' : 'АКТИВЕН'}</span>
-                    </div>
-                    <div class="text-sm text-white mb-1">${user.email || user.phoneNumber || 'Нет данных'}</div>
-                    <div class="text-xs text-gray-400">Создан: ${user.createdAt ? new Date(user.createdAt.seconds * 1000).toLocaleString() : 'неизвестно'}</div>
-                    <div class="flex space-x-2 mt-2">
-                        <button onclick="window.toggleUserBan('${userId}', ${!user.banned})" class="flex-1 py-1 text-xs border border-gray-700 hover:bg-white hover:text-black transition-colors">
-                            ${user.banned ? 'РАЗБЛОКИРОВАТЬ' : 'ЗАБЛОКИРОВАТЬ'}
-                        </button>
-                    </div>
-                `;
-                usersContainer.appendChild(userEl);
-            });
-        };
-
-        window.toggleUserBan = async (userId, ban) => {
-            if (!isAdminLoggedIn) return;
-            try {
-                await updateDoc(doc(db, 'users', userId), { banned: ban });
-                alertModal(`Пользователь ${ban ? 'заблокирован' : 'разблокирован'}`);
-                loadAdminUsers();
-            } catch (error) {
-                alertModal("ОШИБКА");
             }
         };
 
@@ -2256,111 +2029,113 @@
             } catch (error) { alertModal("ОШИБКА"); }
         };
 
-        // --- Image Upload Function ---
-        const uploadImage = async (file, path) => {
-            if (!file) return null;
-            if (!isRegistered) {
-                alertModal("Только зарегистрированные пользователи могут загружать изображения");
-                return null;
-            }
-            // Check file size (5MB max)
-            if (file.size > 5 * 1024 * 1024) {
-                alertModal("Изображение слишком большое (макс 5MB)");
-                return null;
-            }
-            const storageRef = ref(storage, path + '/' + Date.now() + '_' + file.name);
-            try {
-                const snapshot = await uploadBytes(storageRef, file);
-                const url = await getDownloadURL(snapshot.ref);
-                return url;
-            } catch (error) {
-                console.error("Upload error:", error);
-                alertModal("Ошибка загрузки изображения");
-                return null;
-            }
-        };
-
         const handlePostSubmission = async (e) => {
             e.preventDefault();
             const postContent = document.getElementById('post-content').value.trim();
-            const imageFile = document.getElementById('post-image').files[0];
-            if (!postContent && !imageFile) return alertModal("ПУСТОЕ СООБЩЕНИЕ");
+            const fileInput = document.getElementById('post-image');
+            const file = fileInput.files[0];
             
-            // Moderate content before posting (Using Gemini)
-            if (postContent) {
-                alertModal("ПРОВЕРКА СОДЕРЖИМОГО...");
-                const moderation = await checkContentWithGemini(postContent);
-                if (!moderation.allowed) {
-                    alertModal(`НЕ ПРОШЛО МОДЕРАЦИЮ: ${moderation.reason}`);
-                    document.getElementById('post-content').value = ''; // Clear content on fail
-                    document.getElementById('char-count').textContent = '0/500'; // Reset count
+            if (!postContent && !file) return alertModal("ПУСТОЕ СООБЩЕНИЕ ИЛИ ФАЙЛ");
+            
+            alertModal("ПРОВЕРКА СОДЕРЖИМОГО...");
+            const moderation = await checkContentWithGemini(postContent || '');
+
+            if (!moderation.allowed) {
+                alertModal(`НЕ ПРОШЛО МОДЕРАЦИЮ: ${moderation.reason}`);
+                document.getElementById('post-content').value = '';
+                document.getElementById('char-count').textContent = '0/500';
+                fileInput.value = '';
+                document.getElementById('post-image-name').textContent = '';
+                return;
+            }
+            
+            let imageUrl = null;
+            if (file) {
+                try {
+                    alertModal("ЗАГРУЗКА ИЗОБРАЖЕНИЯ...");
+                    imageUrl = await uploadImage(file, 'post_images');
+                } catch (error) {
+                    alertModal(`ОШИБКА ЗАГРУЗКИ: ${error.message}`);
                     return;
                 }
             }
             
-            // Upload image if present
-            let imageUrl = null;
-            if (imageFile) {
-                imageUrl = await uploadImage(imageFile, 'posts');
-                if (!imageUrl) return;
-            }
-            
             try {
-                await addDoc(collection(db, 'posts'), {
-                    content: postContent || null,
-                    imageUrl: imageUrl,
+                const postData = {
+                    content: postContent || '',
                     timestamp: new Date(),
                     deviceId: deviceId,
-                    userId: currentFirebaseUser ? currentFirebaseUser.uid : null,
                     likes: [],
                     likesCount: 0,
                     complaints: [],
                     complaintsCount: 0,
                     repliesCount: 0,
                     deleted: false
-                });
+                };
+                if (imageUrl) postData.imageUrl = imageUrl;
+                
+                await addDoc(collection(db, 'posts'), postData);
                 document.getElementById('post-content').value = '';
-                document.getElementById('post-image').value = '';
                 document.getElementById('char-count').textContent = '0/500';
-            } catch (error) { alertModal("ОШИБКА ОТПРАВКИ"); }
+                fileInput.value = '';
+                document.getElementById('post-image-name').textContent = '';
+            } catch (error) { 
+                alertModal("ОШИБКА ОТПРАВКИ"); 
+            }
         };
         
         const handleReplySubmission = async (postId, replyContent, formElement) => {
-            if (!replyContent) return alertModal("ПУСТО");
+            const fileInput = document.getElementById(`reply-image-${postId}`);
+            const file = fileInput ? fileInput.files[0] : null;
             
-            // Moderate reply content (Using Gemini)
+            if (!replyContent && !file) return alertModal("ПУСТО");
+            
             alertModal("ПРОВЕРКА...");
-            const moderation = await checkContentWithGemini(replyContent);
-
+            const moderation = await checkContentWithGemini(replyContent || '');
             if (!moderation.allowed) {
                 alertModal(`НЕ ПРОШЛО МОДЕРАЦИЮ: ${moderation.reason}`);
-                formElement.replyContent.value = ''; // Clear reply on fail
+                if (formElement.replyContent) formElement.replyContent.value = '';
+                if (fileInput) {
+                    fileInput.value = '';
+                    const nameSpan = document.getElementById(`reply-image-name-${postId}`);
+                    if (nameSpan) nameSpan.textContent = '';
+                }
                 return;
             }
-
-            // Check for image
-            const imageFile = formElement.replyImage ? formElement.replyImage.files[0] : null;
+            
             let imageUrl = null;
-            if (imageFile) {
-                imageUrl = await uploadImage(imageFile, 'replies');
-                if (!imageUrl) return;
+            if (file) {
+                try {
+                    alertModal("ЗАГРУЗКА ИЗОБРАЖЕНИЯ...");
+                    imageUrl = await uploadImage(file, 'reply_images');
+                } catch (error) {
+                    alertModal(`ОШИБКА ЗАГРУЗКИ: ${error.message}`);
+                    return;
+                }
             }
             
             try {
-                await addDoc(collection(db, `posts/${postId}/replies`), {
-                    content: replyContent,
-                    imageUrl: imageUrl,
+                const replyData = {
+                    content: replyContent || '',
                     timestamp: new Date(),
                     deviceId: deviceId,
-                    userId: currentFirebaseUser ? currentFirebaseUser.uid : null,
                     likes: [],
                     complaints: [],
                     complaintsCount: 0
-                });
+                };
+                if (imageUrl) replyData.imageUrl = imageUrl;
+                
+                await addDoc(collection(db, `posts/${postId}/replies`), replyData);
                 await updateDoc(doc(db, 'posts', postId), { repliesCount: increment(1) });
                 formElement.replyContent.value = '';
-                if (formElement.replyImage) formElement.replyImage.value = '';
-            } catch (error) { alertModal("ОШИБКА"); }
+                if (fileInput) {
+                    fileInput.value = '';
+                    const nameSpan = document.getElementById(`reply-image-name-${postId}`);
+                    if (nameSpan) nameSpan.textContent = '';
+                }
+            } catch (error) { 
+                alertModal("ОШИБКА"); 
+            }
         };
 
         const likeReply = async (postId, replyId) => {
@@ -2403,7 +2178,7 @@
                             </div>
                         </div>
                         <p class="text-sm text-gray-200">${escapeHTML(reply.content)}</p>
-                        ${reply.imageUrl ? `<img src="${reply.imageUrl}" class="mt-2 max-w-full h-auto max-h-60 rounded border border-gray-700" />` : ''}
+                        ${reply.imageUrl ? `<div class="mt-2"><img src="${reply.imageUrl}" class="max-w-full h-auto rounded-lg border border-gray-700" style="max-height: 300px;" alt="image" /></div>` : ''}
                     `;
                     repliesContainer.appendChild(el);
                 });
@@ -2439,6 +2214,8 @@
                     const userComplained = post.complaints && post.complaints.includes(deviceId);
                     const replyContainerId = `replies-${postId}`;
                     const replyFormId = `reply-form-${postId}`;
+                    const replyImageId = `reply-image-${postId}`;
+                    const replyImageNameId = `reply-image-name-${postId}`;
 
                     const el = document.createElement('div');
                     el.className = 'post p-6 mb-4 fade-in';
@@ -2452,8 +2229,8 @@
                                 ${isAdminLoggedIn ? `<button onclick="window.deletePost('${postId}')" class="ml-2 text-red-500 hover:text-white">[УДЛ]</button>` : ''}
                             </div>
                         </div>
-                        <div class="text-gray-100 text-lg font-light leading-relaxed mb-6 break-words">${escapeHTML(post.content || '')}</div>
-                        ${post.imageUrl ? `<img src="${post.imageUrl}" class="mb-4 max-w-full h-auto max-h-80 rounded border border-gray-700" />` : ''}
+                        <div class="text-gray-100 text-lg font-light leading-relaxed mb-6 break-words">${escapeHTML(post.content)}</div>
+                        ${post.imageUrl ? `<div class="mb-4"><img src="${post.imageUrl}" class="max-w-full h-auto rounded-lg border border-gray-700" alt="image" /></div>` : ''}
                         
                         <div class="flex items-center justify-between border-t border-gray-800 pt-4 post-actions">
                             <div class="flex space-x-6 font-mono text-xs">
@@ -2474,18 +2251,18 @@
 
                         <div class="mt-4">
                             <div id="${replyContainerId}" class="space-y-2 mb-4"></div>
-                            <form id="${replyFormId}" class="flex flex-col mt-4 relative">
-                                <div class="flex items-center">
-                                    <input name="replyContent" type="text" class="flex-1 p-3 bg-black border-b border-gray-700 text-sm focus:border-white transition-colors placeholder-gray-600 pr-12" placeholder="Ваш ответ..." autocomplete="off" />
-                                    <label class="ml-2 cursor-pointer text-gray-500 hover:text-white">
-                                        <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect><circle cx="8.5" cy="8.5" r="1.5"></circle><polyline points="21 15 16 10 5 21"></polyline></svg>
-                                        <input type="file" name="replyImage" accept="image/*" class="hidden" />
+                            <form id="${replyFormId}" class="mt-4">
+                                <div class="flex items-center gap-2">
+                                    <input name="replyContent" type="text" class="flex-1 p-3 bg-black border-b border-gray-700 text-sm focus:border-white transition-colors placeholder-gray-600" placeholder="Ваш ответ..." autocomplete="off" />
+                                    <label for="${replyImageId}" class="cursor-pointer text-gray-400 hover:text-white transition-colors p-2">
+                                        <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="2" width="20" height="20" rx="2" ry="2"></rect><circle cx="8.5" cy="8.5" r="1.5" fill="currentColor"/><polyline points="21 15 16 10 5 21"></polyline></svg>
                                     </label>
-                                    <button type="submit" class="ml-2 text-gray-500 hover:text-white transition-colors p-2">
+                                    <button type="submit" class="text-gray-500 hover:text-white transition-colors p-2">
                                         <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="22" y1="2" x2="11" y2="13"></line><polygon points="22 2 15 22 11 13 2 9 22 2"></polygon></svg>
                                     </button>
                                 </div>
-                                <span class="text-xs text-gray-500 mt-1">Только для зарегистрированных</span>
+                                <input type="file" id="${replyImageId}" accept="image/*" class="hidden" />
+                                <div id="${replyImageNameId}" class="text-xs text-gray-500 mt-1"></div>
                             </form>
                         </div>
                     `;
@@ -2495,6 +2272,16 @@
                         e.preventDefault();
                         window.handleReplySubmission(postId, e.target.replyContent.value.trim(), e.target);
                     });
+                    
+                    const replyImageInput = document.getElementById(replyImageId);
+                    if (replyImageInput) {
+                        replyImageInput.addEventListener('change', function(e) {
+                            const fileName = e.target.files[0] ? e.target.files[0].name : '';
+                            const nameSpan = document.getElementById(replyImageNameId);
+                            if (nameSpan) nameSpan.textContent = fileName;
+                        });
+                    }
+                    
                     window.listenForReplies(postId, replyContainerId);
                 });
             });
@@ -2538,15 +2325,9 @@
                     <button id="nav-feed" class="tab-btn tab-active text-sm font-bold tracking-widest uppercase hover:text-white transition-colors">Лента</button>
                     <button id="nav-games" class="tab-btn text-sm font-bold tracking-widest uppercase hover:text-white transition-colors">Игры</button>
                 </nav>
-                <div class="flex items-center space-x-4">
-                    <div id="admin-click-target" class="cursor-pointer opacity-70 hover:opacity-100 transition-opacity">
-                        <span class="w-2 h-2 bg-green-500 rounded-full inline-block animate-pulse"></span>
-                        <span class="font-mono text-xs ml-2 text-gray-400">ОНЛАЙН <span id="admin-status"></span></span>
-                    </div>
-                    <div id="auth-section">
-                        <button id="login-btn" class="text-xs font-mono text-gray-400 hover:text-white transition-colors">ВОЙТИ</button>
-                        <span id="user-info" class="text-xs font-mono text-gray-400 hidden"></span>
-                    </div>
+                <div id="admin-click-target" class="cursor-pointer opacity-70 hover:opacity-100 transition-opacity">
+                    <span class="w-2 h-2 bg-green-500 rounded-full inline-block animate-pulse"></span>
+                    <span class="font-mono text-xs ml-2 text-gray-400">ОНЛАЙН <span id="admin-status"></span></span>
                 </div>
             </div>
         </header>
@@ -2558,19 +2339,19 @@
                 <form id="post-form" class="relative">
                     <textarea id="post-content" rows="3" class="w-full p-4 bg-black text-xl font-light text-white placeholder-gray-600 border border-gray-700 focus:border-white transition-colors resize-none" placeholder="Напишите сообщение..." maxlength="500"></textarea>
                     <div class="flex justify-between items-center mt-2 px-1">
-                        <div class="flex items-center space-x-4">
-                            <label class="cursor-pointer text-gray-500 hover:text-white">
-                                <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect><circle cx="8.5" cy="8.5" r="1.5"></circle><polyline points="21 15 16 10 5 21"></polyline></svg>
-                                <input type="file" id="post-image" accept="image/*" class="hidden" />
+                        <div class="flex items-center gap-2">
+                            <label for="post-image" class="cursor-pointer text-gray-400 hover:text-white transition-colors">
+                                <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="2" width="20" height="20" rx="2" ry="2"></rect><circle cx="8.5" cy="8.5" r="1.5" fill="currentColor"/><polyline points="21 15 16 10 5 21"></polyline></svg>
                             </label>
+                            <span id="post-image-name" class="font-mono text-xs text-gray-500"></span>
                             <span id="char-count" class="font-mono text-xs text-gray-500">0/500</span>
                         </div>
                         <button type="submit" class="btn-primary px-6 py-2 text-xs">
                             Опубликовать
                         </button>
                     </div>
+                    <input type="file" id="post-image" accept="image/*" class="hidden" />
                 </form>
-                <p class="text-xs text-gray-600 mt-1">Изображения только для зарегистрированных</p>
             </div>
 
             <!-- Feed Filters (Moved below post form) -->
@@ -2691,29 +2472,6 @@
         </div>
     </div>
 
-    <!-- Registration Modal -->
-    <div id="registration-modal" class="hidden fixed inset-0 bg-black/80 backdrop-blur-sm flex items-center justify-center z-50 p-4 fade-in">
-        <div class="modal-glass p-8 w-full max-w-md relative">
-            <button id="close-reg-modal" class="absolute top-4 right-4 text-gray-500 hover:text-white font-mono text-xl">[x]</button>
-            <h3 class="text-2xl font-bold mb-1 text-white">РЕГИСТРАЦИЯ / ВХОД</h3>
-            <p class="font-mono text-xs text-gray-400 mb-6">ПОДТВЕРЖДЕНИЕ ПО КОДУ</p>
-            <div class="space-y-4">
-                <select id="reg-method" class="w-full p-3 bg-black border border-gray-700 text-white">
-                    <option value="email">Email</option>
-                    <option value="phone">Телефон</option>
-                </select>
-                <input type="text" id="reg-credential" class="w-full p-3 bg-black border border-gray-700 text-white" placeholder="Email или номер телефона">
-                <button id="send-code-btn" class="btn-primary w-full py-3 text-xs">ПОЛУЧИТЬ КОД</button>
-                <div id="code-section" class="hidden">
-                    <input type="text" id="reg-code" class="w-full p-3 bg-black border border-gray-700 text-white" placeholder="Код подтверждения">
-                    <button id="verify-code-btn" class="btn-primary w-full py-3 text-xs mt-2">ПОДТВЕРДИТЬ</button>
-                </div>
-                <button id="finish-email-signin" class="btn-primary w-full py-3 text-xs hidden">ЗАВЕРШИТЬ ВХОД</button>
-                <div id="reg-message" class="font-mono text-xs text-gray-400"></div>
-            </div>
-        </div>
-    </div>
-
     <!-- Admin Modal -->
     <div id="admin-panel-modal" class="hidden fixed inset-0 bg-black/90 flex items-center justify-center z-50 p-4">
         <div class="border border-white/20 bg-black p-8 w-full max-w-md max-h-[90vh] overflow-y-auto">
@@ -2725,19 +2483,9 @@
                 <button id="admin-login-btn" class="w-full btn-primary py-3 text-xs mt-2">ВОЙТИ</button>
             </div>
             
-            <div class="flex space-x-4 mt-6 border-b border-white/10">
-                <button id="admin-tab-tickets" class="tab-btn tab-active text-sm font-mono pb-2 px-1">ТИКЕТЫ</button>
-                <button id="admin-tab-users" class="tab-btn text-sm font-mono pb-2 px-1">ПОЛЬЗОВАТЕЛИ</button>
-            </div>
-
-            <div id="admin-tickets-wrapper" class="mt-4 pt-2">
+            <div id="admin-tickets-wrapper" class="mt-8 pt-6 border-t border-white/10">
                 <h4 class="font-mono text-xs text-gray-500 mb-4 uppercase">ВХОДЯЩИЕ ТИКЕТЫ</h4>
                 <div id="admin-tickets-container" class="admin-tickets-container space-y-2"></div>
-            </div>
-
-            <div id="admin-users-wrapper" class="hidden mt-4 pt-2">
-                <h4 class="font-mono text-xs text-gray-500 mb-4 uppercase">ЗАРЕГИСТРИРОВАННЫЕ ПОЛЬЗОВАТЕЛИ</h4>
-                <div id="admin-users-container" class="space-y-2"></div>
             </div>
         </div>
     </div>
